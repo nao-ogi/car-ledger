@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>中古車仕入台帳</title>
+<style>
+/* ── リセット & 変数 ─────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --navy:#1a3a5c;--navy-d:#0f2540;--navy-l:#2a5080;
+  --blue:#2176ae;--blue-l:#4a9fd4;--blue-xl:#e8f4fd;
+  --green:#2d7a4f;--green-l:#e8f5ee;
+  --amber:#b86a00;--amber-l:#fff8e6;
+  --red:#b83232;--red-l:#fdecea;
+  --gray-50:#f8f9fa;--gray-100:#f0f2f5;--gray-200:#e2e6eb;
+  --gray-400:#9ca3af;--gray-600:#4b5563;--gray-800:#1f2937;
+  --white:#ffffff;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --font:'Hiragino Kaku Gothic ProN','Hiragino Sans','Meiryo','Yu Gothic',sans-serif;
+}
+html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:var(--gray-800);font-size:14px}
+
+/* ── PC レイアウト ──────────────────────────────── */
+.pc-layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.pc-header{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
+.pc-header h1{font-size:17px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.pc-header h1 .ico{font-size:22px}
+.pc-header-right{display:flex;gap:8px}
+.pc-body{display:flex;flex:1;overflow:hidden}
+.pc-sidebar{width:200px;background:var(--white);border-right:1px solid var(--gray-200);display:flex;flex-direction:column;flex-shrink:0}
+.pc-nav-item{display:flex;align-items:center;gap:10px;padding:13px 20px;cursor:pointer;font-size:13px;color:var(--gray-600);border-left:3px solid transparent;transition:all .15s}
+.pc-nav-item:hover{background:var(--blue-xl);color:var(--blue)}
+.pc-nav-item.active{background:var(--blue-xl);color:var(--blue);font-weight:600;border-left-color:var(--blue)}
+.pc-nav-item .ni{font-size:18px}
+.pc-main{flex:1;overflow-y:auto;padding:24px}
+
+/* ── スマホ レイアウト ──────────────────────────── */
+.sp-layout{display:flex;flex-direction:column;height:100vh}
+.sp-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
+.sp-header h1{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
+.sp-body{flex:1;overflow-y:auto;padding:12px;padding-bottom:80px}
+.sp-bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--gray-200);display:flex;z-index:50;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.sp-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;font-size:10px;color:var(--gray-400);gap:3px;transition:color .15s}
+.sp-nav-item.active{color:var(--blue)}
+.sp-nav-item .ni{font-size:22px}
+.sp-nav-item span{font-weight:500}
+
+/* ── 共通コンポーネント ─────────────────────────── */
+.page{display:none}.page.active{display:block}
+.card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);padding:20px;margin-bottom:16px}
+.card-sm{padding:14px}
+
+/* ボタン */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:var(--navy)}
+.btn-outline{background:var(--white);color:var(--gray-800);border-color:var(--gray-200)}
+.btn-outline:hover{background:var(--gray-100)}
+.btn-danger{background:var(--white);color:var(--red);border-color:#fca5a5}
+.btn-danger:hover{background:var(--red-l)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:var(--radius-sm)}
+.btn-icon{padding:6px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--white);cursor:pointer;font-size:18px;color:var(--gray-600);transition:all .15s}
+.btn-icon:hover{background:var(--gray-100)}
+
+/* バッジ */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-stock{background:var(--blue-xl);color:var(--blue)}
+.badge-reserve{background:var(--amber-l);color:var(--amber)}
+.badge-sold{background:var(--green-l);color:var(--green)}
+
+/* フォーム */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:var(--gray-600);letter-spacing:.03em}
+.field input,.field select,.field textarea{padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;color:var(--gray-800);background:var(--white);transition:border-color .15s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(33,118,174,.1)}
+.field input[readonly]{background:var(--gray-100);color:var(--gray-400)}
+.field textarea{resize:vertical;min-height:64px;line-height:1.5}
+.sec-label{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-xl)}
+
+/* テーブル (PC) */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--gray-200)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:860px}
+thead th{background:var(--navy);color:#fff;padding:9px 10px;font-weight:600;font-size:11px;white-space:nowrap;text-align:left;letter-spacing:.03em}
+thead th:first-child{border-radius:var(--radius-md) 0 0 0}
+thead th:last-child{border-radius:0 var(--radius-md) 0 0}
+tbody tr{border-bottom:1px solid var(--gray-200);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--blue-xl)}
+tbody td{padding:8px 10px;vertical-align:middle}
+tbody tr:nth-child(even){background:var(--gray-50)}
+tbody tr:nth-child(even):hover{background:var(--blue-xl)}
+
+/* スマホ カードリスト */
+.car-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.car-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.car-card-title{font-size:15px;font-weight:700;color:var(--gray-800)}
+.car-card-sub{font-size:11px;color:var(--gray-400);margin-top:2px}
+.car-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-200)}
+.car-card-row{display:flex;flex-direction:column;gap:2px}
+.car-card-row .lbl{font-size:10px;color:var(--gray-400);font-weight:600}
+.car-card-row .val{font-size:13px;font-weight:600;color:var(--gray-800)}
+.car-card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--gray-200)}
+
+/* 統計カード */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:16px;box-shadow:var(--shadow-sm)}
+.stat-card .s-label{font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px}
+.stat-card .s-value{font-size:24px;font-weight:800;color:var(--gray-800)}
+.stat-card .s-unit{font-size:13px;font-weight:400;color:var(--gray-400)}
+.stat-card.blue .s-value{color:var(--blue)}
+.stat-card.green .s-value{color:var(--green)}
+.stat-card.amber .s-value{color:var(--amber)}
+.stat-card.red .s-value{color:var(--red)}
+
+/* モーダル */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:min(700px,100%);box-shadow:var(--shadow-md);margin:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--gray-200)}
+.modal-header h2{font-size:15px;font-weight:700}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end}
+
+/* FAB (スマホ用) */
+.fab{position:fixed;bottom:76px;right:16px;z-index:100;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(33,118,174,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+
+/* フィルター */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.filter-bar input,.filter-bar select{padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--white);color:var(--gray-800)}
+.filter-bar input{flex:1;min-width:160px}
+
+/* チャートバー */
+.bar-chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-chart-row .label{width:80px;font-size:12px;color:var(--gray-600);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-chart-row .bar-wrap{flex:1;background:var(--gray-100);border-radius:4px;height:20px;overflow:hidden}
+.bar-chart-row .bar-fill{height:100%;background:var(--blue);border-radius:4px;display:flex;align-items:center;padding-left:6px;min-width:24px;transition:width .3s}
+.bar-chart-row .bar-fill span{font-size:11px;color:#fff;font-weight:600}
+
+/* 棚卸履歴 */
+.inv-record{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.inv-record-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.inv-badge{background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+
+/* 粗利 */
+.profit-pos{color:var(--green);font-weight:700}
+.profit-neg{color:var(--red);font-weight:700}
+
+/* スマホ用調整 */
+@media(max-width:767px){
+  .form-grid{grid-template-columns:1fr 1fr}
+  .modal{border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin:auto 0 0}
+  .modal-bg{padding:0;align-items:flex-end}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .stat-card .s-value{font-size:20px}
+}
+@media(max-width:400px){
+  .form-grid{grid-template-columns:1fr}
+  .form-grid-2{grid-template-columns:1fr}
+}
+
+/* トースト */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:300;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 空状態 */
+.empty-state{text-align:center;padding:48px 20px;color:var(--gray-400)}
+.empty-state .ico{font-size:48px;display:block;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* スクロールバー */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ PC レイアウト ══════════ -->
+<div class="pc-layout" id="pc-layout" style="display:none">
+  <header class="pc-header">
+    <h1><span class="ico">🚗</span>中古車仕入台帳</h1>
+    <div class="pc-header-right">
+      <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV出力</button>
+      <button class="btn btn-primary btn-sm" onclick="openForm()">＋ 新規登録</button>
+    </div>
+  </header>
+  <div class="pc-body">
+    <nav class="pc-sidebar">
+      <div class="pc-nav-item active" data-page="list" onclick="switchPage('list',this)">
+        <span class="ni">📋</span>一覧
+      </div>
+      <div class="pc-nav-item" data-page="stats" onclick="switchPage('stats',this)">
+        <span class="ni">📊</span>集計
+      </div>
+      <div class="pc-nav-item" data-page="inv-history" onclick="switchPage('inv-history',this)">
+        <span class="ni">🗂️</span>棚卸履歴
+      </div>
+    </nav>
+    <main class="pc-main">
+      <!-- 一覧 -->
+      <div class="page active" id="page-list">
+        <div id="pc-stats-row" class="stat-grid" style="grid-template-columns:repeat(5,1fr)"></div>
+        <div class="filter-bar">
+          <input type="text" id="pc-search" placeholder="🔍 車種・仕入先・販売先で検索…" oninput="renderAll()">
+          <select id="pc-status" onchange="renderAll()">
+            <option value="">すべてのステータス</option>
+            <option>在庫中</option><option>売約済</option><option>販売済</option>
+          </select>
+          <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
+              <th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th>
+              <th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th>
+              <th>ステータス</th><th>操作</th>
+            </tr></thead>
+            <tbody id="pc-tbody"></tbody>
+          </table>
+        </div>
+        <div id="pc-empty" class="empty-state" style="display:none">
+          <span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p>
+        </div>
+      </div>
+      <!-- 集計 -->
+      <div class="page" id="page-stats">
+        <div id="pc-profit-cards" class="stat-grid"></div>
+        <div class="card">
+          <div class="sec-label">ステータス内訳</div>
+          <div id="pc-status-bar" style="display:flex;height:28px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
+          <div id="pc-status-legend" style="display:flex;gap:16px;font-size:12px;color:var(--gray-400)"></div>
+        </div>
+        <div class="card">
+          <div class="sec-label">メーカー別仕入台数</div>
+          <div id="pc-maker-chart"></div>
+        </div>
+      </div>
+      <!-- 棚卸履歴 -->
+      <div class="page" id="page-inv-history">
+        <div id="pc-inv-list"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════ スマホ レイアウト ══════════ -->
+<div class="sp-layout" id="sp-layout" style="display:none">
+  <header class="sp-header">
+    <h1>🚗 中古車仕入台帳</h1>
+    <div style="display:flex;gap:6px">
+      <button class="btn-icon" onclick="showInvModal()" title="棚卸">📋</button>
+      <button class="btn-icon" onclick="exportCSV()" title="CSV出力">📥</button>
+    </div>
+  </header>
+  <main class="sp-body">
+    <!-- 一覧 -->
+    <div class="page active" id="sp-page-list">
+      <div id="sp-stats-row" class="stat-grid"></div>
+      <div class="filter-bar" style="gap:6px">
+        <input type="text" id="sp-search" placeholder="🔍 検索…" oninput="renderAll()" style="flex:1">
+        <select id="sp-status" onchange="renderAll()" style="width:100px">
+          <option value="">すべて</option>
+          <option>在庫中</option><option>売約済</option><option>販売済</option>
+        </select>
+      </div>
+      <div id="sp-cards"></div>
+      <div id="sp-empty" class="empty-state" style="display:none">
+        <span class="ico">📭</span><p>データがありません</p>
+      </div>
+    </div>
+    <!-- 集計 -->
+    <div class="page" id="sp-page-stats">
+      <div id="sp-profit-cards" class="stat-grid"></div>
+      <div class="card card-sm">
+        <div class="sec-label">ステータス内訳</div>
+        <div id="sp-status-bar" style="display:flex;height:24px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
+        <div id="sp-status-legend" style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);flex-wrap:wrap"></div>
+      </div>
+      <div class="card card-sm">
+        <div class="sec-label">メーカー別仕入台数</div>
+        <div id="sp-maker-chart"></div>
+      </div>
+    </div>
+    <!-- 棚卸履歴 -->
+    <div class="page" id="sp-page-inv-history">
+      <div id="sp-inv-list"></div>
+    </div>
+  </main>
+  <nav class="sp-bottomnav">
+    <div class="sp-nav-item active" data-page="list" onclick="spSwitchPage('list',this)">
+      <span class="ni">📋</span><span>一覧</span>
+    </div>
+    <div class="sp-nav-item" data-page="stats" onclick="spSwitchPage('stats',this)">
+      <span class="ni">📊</span><span>集計</span>
+    </div>
+    <div class="sp-nav-item" data-page="inv-history" onclick="spSwitchPage('inv-history',this)">
+      <span class="ni">🗂️</span><span>棚卸</span>
+    </div>
+  </nav>
+  <button class="fab" onclick="openForm()">＋</button>
+</div>
+
+<!-- ══════════ 登録/編集モーダル ══════════ -->
+<div class="modal-bg" id="form-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">新規仕入れ登録</h2>
+      <button class="btn-icon" onclick="closeModal('form-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="sec-label">管理情報</div>
+      <div class="form-grid-2">
+        <div class="field"><label>仕入番号</label><input id="f-no" readonly></div>
+        <div class="field"><label>仕入日 ＊</label><input id="f-date" type="date"></div>
+      </div>
+      <div class="sec-label">車両情報</div>
+      <div class="form-grid">
+        <div class="field"><label>メーカー ＊</label><input id="f-maker" placeholder="例：トヨタ"></div>
+        <div class="field"><label>車種 ＊</label><input id="f-model" placeholder="例：プリウス"></div>
+        <div class="field"><label>年式</label><input id="f-year" type="number" placeholder="2020" min="1990" max="2035"></div>
+        <div class="field"><label>車体番号</label><input id="f-vin" placeholder="ZVW5-1234567"></div>
+        <div class="field"><label>走行距離 (km)</label><input id="f-km" type="number" placeholder="45000" min="0"></div>
+        <div class="field"><label>色</label><input id="f-color" placeholder="シルバー"></div>
+      </div>
+      <div class="sec-label">仕入れ情報</div>
+      <div class="form-grid">
+        <div class="field"><label>仕入先業者名</label><input id="f-supplier" placeholder="○○オートオークション"></div>
+        <div class="field"><label>仕入価格 (円) ＊</label><input id="f-price" type="number" placeholder="850000" min="0"></div>
+        <div class="field"><label>諸費用 (円)</label><input id="f-misc" type="number" placeholder="50000" min="0"></div>
+      </div>
+      <div class="sec-label">販売情報</div>
+      <div class="form-grid">
+        <div class="field"><label>販売先</label><input id="f-buyer" placeholder="田中 太郎 様"></div>
+        <div class="field"><label>販売価格 (円)</label><input id="f-sell" type="number" placeholder="1200000" min="0"></div>
+        <div class="field"><label>販売日</label><input id="f-sell-date" type="date"></div>
+      </div>
+      <div class="sec-label">状態・ステータス</div>
+      <div class="form-grid">
+        <div class="field"><label>車両状態</label>
+          <select id="f-cond"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        <div class="field"><label>修復歴</label>
+          <select id="f-repair"><option value="なし">なし</option><option value="あり">あり</option></select></div>
+        <div class="field"><label>ステータス</label>
+          <select id="f-status-sel"><option>在庫中</option><option>売約済</option><option>販売済</option></select></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>備考</label><textarea id="f-note" placeholder="特記事項があれば入力"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('form-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveRecord()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 棚卸モーダル ══════════ -->
+<div class="modal-bg" id="inv-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>棚卸の実施</h2>
+      <button class="btn-icon" onclick="closeModal('inv-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="field"><label>棚卸日 ＊</label><input id="inv-date" type="date"></div>
+        <div class="field"><label>担当者</label><input id="inv-staff" placeholder="山田 花子"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>備考</label>
+        <textarea id="inv-note" placeholder="棚卸時の特記事項" style="min-height:48px"></textarea></div>
+      <div style="background:var(--blue-xl);border-radius:var(--radius-md);padding:14px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫台数</div>
+          <div style="font-size:22px;font-weight:800;color:var(--blue)" id="inv-count-disp">—</div></div>
+        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫評価額</div>
+          <div style="font-size:18px;font-weight:800;color:var(--blue)" id="inv-val-disp">—</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('inv-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="execInventory()">✅ 棚卸を実施・保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── データストア ────────────────────────────────────
+const STORE_KEY = 'car_ledger_v3';
+const INV_KEY   = 'car_inv_v3';
+let data    = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+let invHist = JSON.parse(localStorage.getItem(INV_KEY)   || '[]');
+let editId  = null;
+let isMobile = false;
+
+function persist(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  localStorage.setItem(INV_KEY,   JSON.stringify(invHist));
+}
+
+// ── レイアウト切替 ──────────────────────────────────
+function detectLayout(){
+  isMobile = window.innerWidth < 768;
+  document.getElementById('pc-layout').style.display = isMobile ? 'none' : 'flex';
+  document.getElementById('sp-layout').style.display = isMobile ? 'flex' : 'none';
+}
+window.addEventListener('resize', ()=>{ detectLayout(); renderAll(); });
+
+// ── ページ切替 ──────────────────────────────────────
+function switchPage(name, el){
+  document.querySelectorAll('.pc-nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('#pc-layout .page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='stats') renderStats();
+  if(name==='inv-history') renderInvHistory();
+}
+function spSwitchPage(name, el){
+  document.querySelectorAll('.sp-nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('#sp-layout .page').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sp-page-'+name).classList.add('active');
+  if(name==='stats') renderStats();
+  if(name==='inv-history') renderInvHistory();
+}
+
+// ── ユーティリティ ──────────────────────────────────
+const fmt  = n => n ? '¥' + Number(n).toLocaleString() : '—';
+const fmtK = n => n ? Number(n).toLocaleString() + ' km' : '—';
+function nextNo(){
+  const nums = data.map(d=>parseInt(d.no.replace('J-',''))||0);
+  return 'J-' + (Math.max(0,...nums)+1).toString().padStart(4,'0');
+}
+function calcProfit(d){
+  if(!d.sell || !d.price) return null;
+  return Number(d.sell) - (Number(d.price)+(Number(d.misc)||0));
+}
+function profitHTML(d){
+  const p = calcProfit(d);
+  if(p===null) return '—';
+  return `<span class="${p>=0?'profit-pos':'profit-neg'}">${fmt(p)}</span>`;
+}
+function badgeHTML(s){
+  const cls = s==='在庫中'?'badge-stock':s==='売約済'?'badge-reserve':'badge-sold';
+  return `<span class="badge ${cls}">${s}</span>`;
+}
+function getFiltered(){
+  const q  = (document.getElementById(isMobile?'sp-search':'pc-search').value||'').toLowerCase();
+  const st = document.getElementById(isMobile?'sp-status':'pc-status').value;
+  const mk = isMobile ? '' : (document.getElementById('pc-maker').value||'');
+  return data.filter(d=>{
+    const txt = (d.maker+d.model+(d.supplier||'')+(d.buyer||'')).toLowerCase();
+    return (!q||txt.includes(q)) && (!st||d.status===st) && (!mk||d.maker===mk);
+  });
+}
+
+// ── renderAll ──────────────────────────────────────
+function renderAll(){
+  renderTopStats();
+  if(isMobile) renderSPCards();
+  else { renderPCTable(); renderMakerFilter(); }
+}
+
+// ── 上部統計 ──────────────────────────────────────
+function renderTopStats(){
+  const total   = data.length;
+  const inStock = data.filter(d=>d.status==='在庫中').length;
+  const reserve = data.filter(d=>d.status==='売約済').length;
+  const sold    = data.filter(d=>d.status==='販売済').length;
+  const profits = data.map(d=>calcProfit(d)).filter(p=>p!==null);
+  const totalP  = profits.reduce((s,p)=>s+p,0);
+  const html = `
+    <div class="stat-card"><div class="s-label">総仕入台数</div><div class="s-value">${total}<span class="s-unit"> 台</span></div></div>
+    <div class="stat-card blue"><div class="s-label">在庫中</div><div class="s-value">${inStock}<span class="s-unit"> 台</span></div></div>
+    <div class="stat-card amber"><div class="s-label">売約済</div><div class="s-value">${reserve}<span class="s-unit"> 台</span></div></div>
+    <div class="stat-card green"><div class="s-label">販売済</div><div class="s-value">${sold}<span class="s-unit"> 台</span></div></div>
+    <div class="stat-card ${totalP>=0?'green':'red'}"><div class="s-label">累計粗利</div><div class="s-value" style="font-size:18px">${fmt(totalP)}</div></div>`;
+  const pEl = document.getElementById('pc-stats-row');
+  const sEl = document.getElementById('sp-stats-row');
+  if(pEl) pEl.innerHTML = html;
+  if(sEl) sEl.innerHTML = html;
+}
+
+// ── PCテーブル ──────────────────────────────────────
+function renderPCTable(){
+  const rows = getFiltered();
+  const empty = document.getElementById('pc-empty');
+  const tbody = document.getElementById('pc-tbody');
+  empty.style.display = rows.length ? 'none' : 'block';
+  tbody.innerHTML = rows.map(d=>`
+    <tr>
+      <td><b>${d.no}</b></td>
+      <td>${d.date}</td>
+      <td>${d.maker}</td>
+      <td>${d.model}${d.year?' <small style="color:var(--gray-400)">'+d.year+'年</small>':''}</td>
+      <td>${d.year||'—'}</td>
+      <td>${fmtK(d.km)}</td>
+      <td>${fmt(d.price)}</td>
+      <td>${fmt(d.sell)}</td>
+      <td>${profitHTML(d)}</td>
+      <td style="font-size:11px">${d.buyer||'—'}</td>
+      <td><b>${d.cond}</b></td>
+      <td style="color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
+      <td>${badgeHTML(d.status)}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px">
+        <button class="btn btn-outline btn-sm" onclick="openEdit('${d.id}')">✏️ 編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRec('${d.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── スマホカード ────────────────────────────────────
+function renderSPCards(){
+  const rows = getFiltered();
+  const empty = document.getElementById('sp-empty');
+  const el    = document.getElementById('sp-cards');
+  empty.style.display = rows.length ? 'none' : 'block';
+  el.innerHTML = rows.map(d=>`
+    <div class="car-card">
+      <div class="car-card-header">
+        <div>
+          <div class="car-card-title">${d.maker} ${d.model}</div>
+          <div class="car-card-sub">${d.no}　${d.date}　${d.year||''}年式</div>
+        </div>
+        ${badgeHTML(d.status)}
+      </div>
+      <div class="car-card-grid">
+        <div class="car-card-row"><span class="lbl">仕入価格</span><span class="val">${fmt(d.price)}</span></div>
+        <div class="car-card-row"><span class="lbl">販売価格</span><span class="val">${fmt(d.sell)}</span></div>
+        <div class="car-card-row"><span class="lbl">粗利</span><span class="val">${profitHTML(d)}</span></div>
+        <div class="car-card-row"><span class="lbl">走行距離</span><span class="val">${fmtK(d.km)}</span></div>
+        ${d.buyer?`<div class="car-card-row" style="grid-column:1/-1"><span class="lbl">販売先</span><span class="val">${d.buyer}</span></div>`:''}
+      </div>
+      <div class="car-card-actions">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="openEdit('${d.id}')">✏️ 編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRec('${d.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── メーカーフィルター ──────────────────────────────
+function renderMakerFilter(){
+  const makers = [...new Set(data.map(d=>d.maker).filter(Boolean))].sort();
+  const sel = document.getElementById('pc-maker');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全メーカー</option>' + makers.map(m=>`<option${m===cur?' selected':''}>${m}</option>`).join('');
+}
+
+// ── 集計タブ ───────────────────────────────────────
+function renderStats(){
+  const total   = data.length;
+  const inStock = data.filter(d=>d.status==='在庫中').length;
+  const reserve = data.filter(d=>d.status==='売約済').length;
+  const sold    = data.filter(d=>d.status==='販売済').length;
+  const profits = data.filter(d=>d.sell&&d.price).map(d=>calcProfit(d));
+  const totalP  = profits.reduce((s,p)=>s+p,0);
+  const avgP    = profits.length ? Math.round(totalP/profits.length) : 0;
+  const stockV  = data.filter(d=>d.status==='在庫中').reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  const totalC  = data.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+
+  const cards = `
+    <div class="stat-card"><div class="s-label">仕入合計コスト</div><div class="s-value" style="font-size:18px">${fmt(totalC)}</div></div>
+    <div class="stat-card blue"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:18px">${fmt(stockV)}</div></div>
+    <div class="stat-card green"><div class="s-label">累計粗利</div><div class="s-value" style="font-size:18px;color:${totalP>=0?'var(--green)':'var(--red)'}">${fmt(totalP)}</div></div>
+    <div class="stat-card ${avgP>=0?'green':'red'}"><div class="s-label">平均粗利 / 台</div><div class="s-value" style="font-size:18px">${fmt(avgP)}</div></div>`;
+
+  ['pc-profit-cards','sp-profit-cards'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=cards;
+  });
+
+  const barData = [
+    {label:'在庫中', n:inStock, color:'#2176ae'},
+    {label:'売約済', n:reserve, color:'#b86a00'},
+    {label:'販売済', n:sold,    color:'#2d7a4f'},
+  ].filter(x=>x.n>0);
+
+  const barHTML = barData.map(x=>`<div style="flex:${x.n};background:${x.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${x.n}</div>`).join('');
+  const legendHTML = barData.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;background:${x.color};border-radius:2px;margin-right:4px"></span>${x.label} ${x.n}台</span>`).join('');
+
+  ['pc','sp'].forEach(p=>{
+    const b=document.getElementById(p+'-status-bar');
+    const l=document.getElementById(p+'-status-legend');
+    if(b) b.innerHTML = total ? barHTML : '<div style="flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gray-400)">データなし</div>';
+    if(l) l.innerHTML = legendHTML;
+  });
+
+  const makerCount={};
+  data.forEach(d=>{if(d.maker)makerCount[d.maker]=(makerCount[d.maker]||0)+1});
+  const top = Object.entries(makerCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxC = top[0]?top[0][1]:1;
+  const makerHTML = top.map(([m,c])=>`
+    <div class="bar-chart-row">
+      <span class="label">${m}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(c/maxC*100)}%"><span>${c}</span></div></div>
+    </div>`).join('') || '<p style="font-size:12px;color:var(--gray-400)">データなし</p>';
+
+  ['pc','sp'].forEach(p=>{
+    const el=document.getElementById(p+'-maker-chart');
+    if(el) el.innerHTML=makerHTML;
+  });
+}
+
+// ── 棚卸履歴 ─────────────────────────────────────
+function renderInvHistory(){
+  const html = invHist.length === 0
+    ? '<div class="empty-state"><span class="ico">📋</span><p>棚卸履歴がありません</p></div>'
+    : invHist.slice().reverse().map(inv=>`
+      <div class="inv-record">
+        <div class="inv-record-header">
+          <div>
+            <span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">担当：${inv.staff||'—'}</div>
+          </div>
+          <span class="inv-badge">在庫 ${inv.count}台</span>
+        </div>
+        <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+          <div class="stat-card card-sm"><div class="s-label">在庫台数</div><div class="s-value">${inv.count}<span class="s-unit"> 台</span></div></div>
+          <div class="stat-card blue card-sm"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:16px">${fmt(inv.value)}</div></div>
+        </div>
+        ${inv.note?`<div style="font-size:12px;color:var(--gray-400);margin-top:8px">📝 ${inv.note}</div>`:''}
+        ${inv.snapshot&&inv.snapshot.length?`
+        <details style="margin-top:10px">
+          <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">在庫車両リスト（${inv.snapshot.length}台）を見る</summary>
+          <div style="overflow-x:auto;margin-top:8px">
+            <table style="min-width:400px;font-size:12px;width:100%">
+              <thead><tr>
+                <th style="background:var(--navy);color:#fff;padding:6px 8px">仕入番号</th>
+                <th style="background:var(--navy);color:#fff;padding:6px 8px">メーカー</th>
+                <th style="background:var(--navy);color:#fff;padding:6px 8px">車種</th>
+                <th style="background:var(--navy);color:#fff;padding:6px 8px">年式</th>
+                <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right">仕入価格</th>
+              </tr></thead>
+              <tbody>${inv.snapshot.map((s,i)=>`
+                <tr style="background:${i%2?'var(--gray-50)':'#fff'}">
+                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no}</td>
+                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker}</td>
+                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model}</td>
+                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.year||'—'}</td>
+                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(s.price)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </details>`:''}
+      </div>`).join('');
+  ['pc-inv-list','sp-inv-list'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=html;
+  });
+}
+
+// ── フォーム操作 ────────────────────────────────────
+function openForm(){
+  editId = null;
+  document.getElementById('modal-title').textContent = '新規仕入れ登録';
+  ['maker','model','year','vin','km','color','supplier','price','misc','buyer','sell','sell-date','note'].forEach(f=>{
+    const el=document.getElementById('f-'+f);if(el)el.value='';
+  });
+  document.getElementById('f-no').value = nextNo();
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-cond').value = 'A';
+  document.getElementById('f-repair').value = 'なし';
+  document.getElementById('f-status-sel').value = '在庫中';
+  openModal('form-modal');
+}
+function openEdit(id){
+  const d = data.find(x=>x.id===id); if(!d) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = '仕入れ情報を編集';
+  const map = {no:d.no,date:d.date,maker:d.maker,model:d.model,year:d.year||'',
+    vin:d.vin||'',km:d.km||'',color:d.color||'',supplier:d.supplier||'',
+    price:d.price||'',misc:d.misc||'',buyer:d.buyer||'',sell:d.sell||'',
+    'sell-date':d.sellDate||'',note:d.note||''};
+  Object.entries(map).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;});
+  document.getElementById('f-cond').value = d.cond||'A';
+  document.getElementById('f-repair').value = d.repair||'なし';
+  document.getElementById('f-status-sel').value = d.status||'在庫中';
+  openModal('form-modal');
+}
+function saveRecord(){
+  const date  = document.getElementById('f-date').value;
+  const maker = document.getElementById('f-maker').value.trim();
+  const model = document.getElementById('f-model').value.trim();
+  const price = document.getElementById('f-price').value;
+  if(!date||!maker||!model||!price){showToast('⚠ 仕入日・メーカー・車種・仕入価格は必須です');return;}
+  const rec = {
+    id: editId || (Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    no: document.getElementById('f-no').value, date, maker, model,
+    year:    document.getElementById('f-year').value,
+    vin:     document.getElementById('f-vin').value,
+    km:      document.getElementById('f-km').value,
+    color:   document.getElementById('f-color').value,
+    supplier:document.getElementById('f-supplier').value,
+    price, misc: document.getElementById('f-misc').value,
+    buyer:   document.getElementById('f-buyer').value,
+    sell:    document.getElementById('f-sell').value,
+    sellDate:document.getElementById('f-sell-date').value,
+    cond:    document.getElementById('f-cond').value,
+    repair:  document.getElementById('f-repair').value,
+    status:  document.getElementById('f-status-sel').value,
+    note:    document.getElementById('f-note').value,
+  };
+  if(editId){ const i=data.findIndex(x=>x.id===editId); data[i]=rec; }
+  else data.push(rec);
+  persist();
+  closeModal('form-modal');
+  renderAll();
+  showToast(editId ? '✅ 更新しました' : '✅ 登録しました');
+}
+function deleteRec(id){
+  if(!confirm('この記録を削除しますか？')) return;
+  data = data.filter(x=>x.id!==id);
+  persist();
+  renderAll();
+  showToast('🗑 削除しました');
+}
+
+// ── 棚卸 ────────────────────────────────────────────
+function showInvModal(){
+  const stocks = data.filter(d=>d.status==='在庫中');
+  const val = stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  document.getElementById('inv-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('inv-staff').value = '';
+  document.getElementById('inv-note').value = '';
+  document.getElementById('inv-count-disp').textContent = stocks.length + ' 台';
+  document.getElementById('inv-val-disp').textContent = fmt(val);
+  openModal('inv-modal');
+}
+function execInventory(){
+  const date = document.getElementById('inv-date').value;
+  if(!date){showToast('⚠ 棚卸日を入力してください');return;}
+  const stocks = data.filter(d=>d.status==='在庫中');
+  const val = stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  invHist.push({
+    id: Date.now().toString(36),
+    date, staff: document.getElementById('inv-staff').value,
+    note: document.getElementById('inv-note').value,
+    count: stocks.length, value: val,
+    snapshot: stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))
+  });
+  persist();
+  closeModal('inv-modal');
+  showToast('✅ 棚卸を保存しました');
+}
+
+// ── CSV出力 ─────────────────────────────────────────
+function exportCSV(){
+  if(!data.length){showToast('⚠ データがありません');return;}
+  const rows = [['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号',
+    '仕入先','仕入価格(円)','諸費用(円)','仕入合計(円)','販売先','販売価格(円)','粗利(円)',
+    '販売日','車両状態','修復歴','ステータス','備考']];
+  data.forEach(d=>{
+    const cost=(Number(d.price)||0)+(Number(d.misc)||0);
+    const profit=d.sell?Number(d.sell)-cost:'';
+    rows.push([d.no,d.date,d.maker,d.model,d.year||'',d.km||'',d.color||'',d.vin||'',
+      d.supplier||'',Number(d.price)||'',Number(d.misc)||'',cost,
+      d.buyer||'',d.sell?Number(d.sell):'',profit,d.sellDate||'',
+      d.cond,d.repair,d.status,d.note||'']);
+  });
+  const csv = rows.map(r=>r.map(c=>{
+    const s=String(c??'');
+    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📥 CSVを出力しました');
+}
+
+// ── モーダル ─────────────────────────────────────────
+function openModal(id){
+  const el=document.getElementById(id);
+  el.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{if(e.target===bg)closeModal(bg.id);});
+});
+
+// ── トースト ─────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── 初期化 ─────────────────────────────────────────
+function init(){
+  detectLayout();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
