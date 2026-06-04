@@ -4,13 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>中古車仕入台帳</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-/* ── リセット & 変数 ─────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --navy:#1a3a5c;--navy-d:#0f2540;--navy-l:#2a5080;
+  --navy:#1a3a5c;--navy-d:#0f2540;
   --blue:#2176ae;--blue-l:#4a9fd4;--blue-xl:#e8f4fd;
   --green:#2d7a4f;--green-l:#e8f5ee;
   --amber:#b86a00;--amber-l:#fff8e6;
@@ -25,12 +24,30 @@
 }
 html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:var(--gray-800);font-size:14px}
 
-/* ── PC レイアウト ──────────────────────────────── */
+/* ログイン画面 */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:24px;background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%)}
+#login-screen .login-card{background:var(--white);border-radius:var(--radius-lg);padding:40px 36px;box-shadow:var(--shadow-md);text-align:center;width:min(360px,90vw)}
+#login-screen h1{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px}
+#login-screen p{font-size:13px;color:var(--gray-400);margin-bottom:28px;line-height:1.6}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--white);font-family:var(--font);font-size:14px;font-weight:600;color:var(--gray-800);cursor:pointer;transition:all .15s}
+.google-btn:hover{background:var(--gray-50);border-color:var(--blue)}
+.google-btn img{width:20px;height:20px}
+.login-note{font-size:11px;color:rgba(255,255,255,.6);text-align:center}
+
+/* ローディング */
+#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--gray-100)}
+.spinner{width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-screen p{font-size:13px;color:var(--gray-400)}
+
+/* メインアプリ */
+#app{display:none;height:100vh;flex-direction:column}
+
+/* PC レイアウト */
 .pc-layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .pc-header{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
 .pc-header h1{font-size:17px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
-.pc-header h1 .ico{font-size:22px}
-.pc-header-right{display:flex;gap:8px}
+.pc-header-right{display:flex;gap:8px;align-items:center}
 .pc-body{display:flex;flex:1;overflow:hidden}
 .pc-sidebar{width:200px;background:var(--white);border-right:1px solid var(--gray-200);display:flex;flex-direction:column;flex-shrink:0}
 .pc-nav-item{display:flex;align-items:center;gap:10px;padding:13px 20px;cursor:pointer;font-size:13px;color:var(--gray-600);border-left:3px solid transparent;transition:all .15s}
@@ -39,23 +56,20 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .pc-nav-item .ni{font-size:18px}
 .pc-main{flex:1;overflow-y:auto;padding:24px}
 
-/* ── スマホ レイアウト ──────────────────────────── */
+/* スマホ レイアウト */
 .sp-layout{display:flex;flex-direction:column;height:100vh}
-.sp-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
+.sp-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sp-header h1{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
 .sp-body{flex:1;overflow-y:auto;padding:12px;padding-bottom:80px}
 .sp-bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--gray-200);display:flex;z-index:50;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .sp-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;font-size:10px;color:var(--gray-400);gap:3px;transition:color .15s}
 .sp-nav-item.active{color:var(--blue)}
 .sp-nav-item .ni{font-size:22px}
-.sp-nav-item span{font-weight:500}
 
-/* ── 共通コンポーネント ─────────────────────────── */
+/* 共通 */
 .page{display:none}.page.active{display:block}
 .card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);padding:20px;margin-bottom:16px}
 .card-sm{padding:14px}
-
-/* ボタン */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .btn-primary:hover{background:var(--navy)}
@@ -66,14 +80,10 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:var(--radius-sm)}
 .btn-icon{padding:6px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--white);cursor:pointer;font-size:18px;color:var(--gray-600);transition:all .15s}
 .btn-icon:hover{background:var(--gray-100)}
-
-/* バッジ */
 .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-stock{background:var(--blue-xl);color:var(--blue)}
 .badge-reserve{background:var(--amber-l);color:var(--amber)}
 .badge-sold{background:var(--green-l);color:var(--green)}
-
-/* フォーム */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:5px}
@@ -82,44 +92,33 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(33,118,174,.1)}
 .field input[readonly]{background:var(--gray-100);color:var(--gray-400)}
 .field textarea{resize:vertical;min-height:64px;line-height:1.5}
-.sec-label{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-xl)}
-
-/* テーブル (PC) */
+.sec-label{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.08em;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-xl)}
 .tbl-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--gray-200)}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:860px}
-thead th{background:var(--navy);color:#fff;padding:9px 10px;font-weight:600;font-size:11px;white-space:nowrap;text-align:left;letter-spacing:.03em}
-thead th:first-child{border-radius:var(--radius-md) 0 0 0}
-thead th:last-child{border-radius:0 var(--radius-md) 0 0}
+thead th{background:var(--navy);color:#fff;padding:9px 10px;font-weight:600;font-size:11px;white-space:nowrap;text-align:left}
 tbody tr{border-bottom:1px solid var(--gray-200);transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--blue-xl)}
 tbody td{padding:8px 10px;vertical-align:middle}
 tbody tr:nth-child(even){background:var(--gray-50)}
 tbody tr:nth-child(even):hover{background:var(--blue-xl)}
-
-/* スマホ カードリスト */
 .car-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
 .car-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.car-card-title{font-size:15px;font-weight:700;color:var(--gray-800)}
+.car-card-title{font-size:15px;font-weight:700}
 .car-card-sub{font-size:11px;color:var(--gray-400);margin-top:2px}
 .car-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-200)}
-.car-card-row{display:flex;flex-direction:column;gap:2px}
 .car-card-row .lbl{font-size:10px;color:var(--gray-400);font-weight:600}
-.car-card-row .val{font-size:13px;font-weight:600;color:var(--gray-800)}
+.car-card-row .val{font-size:13px;font-weight:600}
 .car-card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--gray-200)}
-
-/* 統計カード */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
 .stat-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:16px;box-shadow:var(--shadow-sm)}
 .stat-card .s-label{font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px}
-.stat-card .s-value{font-size:24px;font-weight:800;color:var(--gray-800)}
+.stat-card .s-value{font-size:24px;font-weight:800}
 .stat-card .s-unit{font-size:13px;font-weight:400;color:var(--gray-400)}
 .stat-card.blue .s-value{color:var(--blue)}
 .stat-card.green .s-value{color:var(--green)}
 .stat-card.amber .s-value{color:var(--amber)}
 .stat-card.red .s-value{color:var(--red)}
-
-/* モーダル */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--white);border-radius:var(--radius-lg);width:min(700px,100%);box-shadow:var(--shadow-md);margin:auto}
@@ -127,33 +126,28 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 .modal-header h2{font-size:15px;font-weight:700}
 .modal-body{padding:20px}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end}
-
-/* FAB (スマホ用) */
 .fab{position:fixed;bottom:76px;right:16px;z-index:100;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(33,118,174,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s}
 .fab:active{transform:scale(.92)}
-
-/* フィルター */
 .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .filter-bar input,.filter-bar select{padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--white);color:var(--gray-800)}
 .filter-bar input{flex:1;min-width:160px}
-
-/* チャートバー */
 .bar-chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .bar-chart-row .label{width:80px;font-size:12px;color:var(--gray-600);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-chart-row .bar-wrap{flex:1;background:var(--gray-100);border-radius:4px;height:20px;overflow:hidden}
-.bar-chart-row .bar-fill{height:100%;background:var(--blue);border-radius:4px;display:flex;align-items:center;padding-left:6px;min-width:24px;transition:width .3s}
+.bar-chart-row .bar-fill{height:100%;background:var(--blue);border-radius:4px;display:flex;align-items:center;padding-left:6px;min-width:24px}
 .bar-chart-row .bar-fill span{font-size:11px;color:#fff;font-weight:600}
-
-/* 棚卸履歴 */
 .inv-record{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
-.inv-record-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.inv-badge{background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-
-/* 粗利 */
 .profit-pos{color:var(--green);font-weight:700}
 .profit-neg{color:var(--red);font-weight:700}
-
-/* スマホ用調整 */
+.sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.sync-ok{background:#e8f5ee;color:var(--green)}
+.sync-ing{background:#fff8e6;color:var(--amber)}
+.sync-err{background:#fdecea;color:var(--red)}
+.user-avatar{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:300;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty-state{text-align:center;padding:48px 20px;color:var(--gray-400)}
+.empty-state .ico{font-size:48px;display:block;margin-bottom:12px}
 @media(max-width:767px){
   .form-grid{grid-template-columns:1fr 1fr}
   .modal{border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin:auto 0 0}
@@ -165,17 +159,6 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   .form-grid{grid-template-columns:1fr}
   .form-grid-2{grid-template-columns:1fr}
 }
-
-/* トースト */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:300;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* 空状態 */
-.empty-state{text-align:center;padding:48px 20px;color:var(--gray-400)}
-.empty-state .ico{font-size:48px;display:block;margin-bottom:12px}
-.empty-state p{font-size:14px}
-
-/* スクロールバー */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:3px}
@@ -186,134 +169,141 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 <!-- トースト -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════ PC レイアウト ══════════ -->
-<div class="pc-layout" id="pc-layout" style="display:none">
-  <header class="pc-header">
-    <h1><span class="ico">🚗</span>中古車仕入台帳</h1>
-    <div class="pc-header-right">
-      <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
-      <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV出力</button>
-      <button class="btn btn-primary btn-sm" onclick="openForm()">＋ 新規登録</button>
+<!-- ログイン画面 -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:12px">🚗</div>
+    <h1>中古車仕入台帳</h1>
+    <p>Googleアカウントでログインしてください。<br>データはGoogle Driveに保存されます。</p>
+    <button class="google-btn" onclick="signIn()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Googleでログイン
+    </button>
+  </div>
+  <p class="login-note">データはあなたのGoogle Driveにのみ保存されます</p>
+</div>
+
+<!-- ローディング -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p id="loading-msg">データを読み込み中…</p>
+</div>
+
+<!-- メインアプリ -->
+<div id="app">
+
+  <!-- PC レイアウト -->
+  <div class="pc-layout" id="pc-layout" style="display:none">
+    <header class="pc-header">
+      <h1>🚗 中古車仕入台帳</h1>
+      <div class="pc-header-right">
+        <span class="sync-badge sync-ok" id="pc-sync-badge">✅ 同期済み</span>
+        <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="openForm()">＋ 新規登録</button>
+        <img id="pc-avatar" class="user-avatar" src="" alt="user" style="display:none">
+        <button class="btn btn-outline btn-sm" onclick="signOut()">ログアウト</button>
+      </div>
+    </header>
+    <div class="pc-body">
+      <nav class="pc-sidebar">
+        <div class="pc-nav-item active" onclick="switchPage('list',this)"><span class="ni">📋</span>一覧</div>
+        <div class="pc-nav-item" onclick="switchPage('stats',this)"><span class="ni">📊</span>集計</div>
+        <div class="pc-nav-item" onclick="switchPage('inv-history',this)"><span class="ni">🗂️</span>棚卸履歴</div>
+      </nav>
+      <main class="pc-main">
+        <div class="page active" id="page-list">
+          <div id="pc-stats-row" class="stat-grid" style="grid-template-columns:repeat(5,1fr)"></div>
+          <div class="filter-bar">
+            <input type="text" id="pc-search" placeholder="🔍 車種・仕入先・販売先で検索…" oninput="renderAll()">
+            <select id="pc-status" onchange="renderAll()">
+              <option value="">すべてのステータス</option>
+              <option>在庫中</option><option>売約済</option><option>販売済</option>
+            </select>
+            <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
+                <th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th>
+                <th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th>
+                <th>ステータス</th><th>操作</th>
+              </tr></thead>
+              <tbody id="pc-tbody"></tbody>
+            </table>
+          </div>
+          <div id="pc-empty" class="empty-state" style="display:none">
+            <span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p>
+          </div>
+        </div>
+        <div class="page" id="page-stats">
+          <div id="pc-profit-cards" class="stat-grid"></div>
+          <div class="card">
+            <div class="sec-label">ステータス内訳</div>
+            <div id="pc-status-bar" style="display:flex;height:28px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
+            <div id="pc-status-legend" style="display:flex;gap:16px;font-size:12px;color:var(--gray-400)"></div>
+          </div>
+          <div class="card">
+            <div class="sec-label">メーカー別仕入台数</div>
+            <div id="pc-maker-chart"></div>
+          </div>
+        </div>
+        <div class="page" id="page-inv-history"><div id="pc-inv-list"></div></div>
+      </main>
     </div>
-  </header>
-  <div class="pc-body">
-    <nav class="pc-sidebar">
-      <div class="pc-nav-item active" data-page="list" onclick="switchPage('list',this)">
-        <span class="ni">📋</span>一覧
+  </div>
+
+  <!-- スマホ レイアウト -->
+  <div class="sp-layout" id="sp-layout" style="display:none">
+    <header class="sp-header">
+      <h1>🚗 中古車仕入台帳</h1>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="sync-badge sync-ok" id="sp-sync-badge" style="font-size:10px">✅</span>
+        <button class="btn-icon" onclick="showInvModal()">📋</button>
+        <button class="btn-icon" onclick="exportCSV()">📥</button>
+        <button class="btn-icon" onclick="signOut()">🚪</button>
       </div>
-      <div class="pc-nav-item" data-page="stats" onclick="switchPage('stats',this)">
-        <span class="ni">📊</span>集計
-      </div>
-      <div class="pc-nav-item" data-page="inv-history" onclick="switchPage('inv-history',this)">
-        <span class="ni">🗂️</span>棚卸履歴
-      </div>
-    </nav>
-    <main class="pc-main">
-      <!-- 一覧 -->
-      <div class="page active" id="page-list">
-        <div id="pc-stats-row" class="stat-grid" style="grid-template-columns:repeat(5,1fr)"></div>
-        <div class="filter-bar">
-          <input type="text" id="pc-search" placeholder="🔍 車種・仕入先・販売先で検索…" oninput="renderAll()">
-          <select id="pc-status" onchange="renderAll()">
-            <option value="">すべてのステータス</option>
+    </header>
+    <main class="sp-body">
+      <div class="page active" id="sp-page-list">
+        <div id="sp-stats-row" class="stat-grid"></div>
+        <div class="filter-bar" style="gap:6px">
+          <input type="text" id="sp-search" placeholder="🔍 検索…" oninput="renderAll()" style="flex:1">
+          <select id="sp-status" onchange="renderAll()" style="width:100px">
+            <option value="">すべて</option>
             <option>在庫中</option><option>売約済</option><option>販売済</option>
           </select>
-          <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
         </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
-              <th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th>
-              <th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th>
-              <th>ステータス</th><th>操作</th>
-            </tr></thead>
-            <tbody id="pc-tbody"></tbody>
-          </table>
-        </div>
-        <div id="pc-empty" class="empty-state" style="display:none">
-          <span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p>
+        <div id="sp-cards"></div>
+        <div id="sp-empty" class="empty-state" style="display:none">
+          <span class="ico">📭</span><p>データがありません</p>
         </div>
       </div>
-      <!-- 集計 -->
-      <div class="page" id="page-stats">
-        <div id="pc-profit-cards" class="stat-grid"></div>
-        <div class="card">
+      <div class="page" id="sp-page-stats">
+        <div id="sp-profit-cards" class="stat-grid"></div>
+        <div class="card card-sm">
           <div class="sec-label">ステータス内訳</div>
-          <div id="pc-status-bar" style="display:flex;height:28px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
-          <div id="pc-status-legend" style="display:flex;gap:16px;font-size:12px;color:var(--gray-400)"></div>
+          <div id="sp-status-bar" style="display:flex;height:24px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
+          <div id="sp-status-legend" style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);flex-wrap:wrap"></div>
         </div>
-        <div class="card">
+        <div class="card card-sm">
           <div class="sec-label">メーカー別仕入台数</div>
-          <div id="pc-maker-chart"></div>
+          <div id="sp-maker-chart"></div>
         </div>
       </div>
-      <!-- 棚卸履歴 -->
-      <div class="page" id="page-inv-history">
-        <div id="pc-inv-list"></div>
-      </div>
+      <div class="page" id="sp-page-inv-history"><div id="sp-inv-list"></div></div>
     </main>
+    <nav class="sp-bottomnav">
+      <div class="sp-nav-item active" onclick="spSwitchPage('list',this)"><span class="ni">📋</span><span>一覧</span></div>
+      <div class="sp-nav-item" onclick="spSwitchPage('stats',this)"><span class="ni">📊</span><span>集計</span></div>
+      <div class="sp-nav-item" onclick="spSwitchPage('inv-history',this)"><span class="ni">🗂️</span><span>棚卸</span></div>
+    </nav>
+    <button class="fab" onclick="openForm()">＋</button>
   </div>
 </div>
 
-<!-- ══════════ スマホ レイアウト ══════════ -->
-<div class="sp-layout" id="sp-layout" style="display:none">
-  <header class="sp-header">
-    <h1>🚗 中古車仕入台帳</h1>
-    <div style="display:flex;gap:6px">
-      <button class="btn-icon" onclick="showInvModal()" title="棚卸">📋</button>
-      <button class="btn-icon" onclick="exportCSV()" title="CSV出力">📥</button>
-    </div>
-  </header>
-  <main class="sp-body">
-    <!-- 一覧 -->
-    <div class="page active" id="sp-page-list">
-      <div id="sp-stats-row" class="stat-grid"></div>
-      <div class="filter-bar" style="gap:6px">
-        <input type="text" id="sp-search" placeholder="🔍 検索…" oninput="renderAll()" style="flex:1">
-        <select id="sp-status" onchange="renderAll()" style="width:100px">
-          <option value="">すべて</option>
-          <option>在庫中</option><option>売約済</option><option>販売済</option>
-        </select>
-      </div>
-      <div id="sp-cards"></div>
-      <div id="sp-empty" class="empty-state" style="display:none">
-        <span class="ico">📭</span><p>データがありません</p>
-      </div>
-    </div>
-    <!-- 集計 -->
-    <div class="page" id="sp-page-stats">
-      <div id="sp-profit-cards" class="stat-grid"></div>
-      <div class="card card-sm">
-        <div class="sec-label">ステータス内訳</div>
-        <div id="sp-status-bar" style="display:flex;height:24px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
-        <div id="sp-status-legend" style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);flex-wrap:wrap"></div>
-      </div>
-      <div class="card card-sm">
-        <div class="sec-label">メーカー別仕入台数</div>
-        <div id="sp-maker-chart"></div>
-      </div>
-    </div>
-    <!-- 棚卸履歴 -->
-    <div class="page" id="sp-page-inv-history">
-      <div id="sp-inv-list"></div>
-    </div>
-  </main>
-  <nav class="sp-bottomnav">
-    <div class="sp-nav-item active" data-page="list" onclick="spSwitchPage('list',this)">
-      <span class="ni">📋</span><span>一覧</span>
-    </div>
-    <div class="sp-nav-item" data-page="stats" onclick="spSwitchPage('stats',this)">
-      <span class="ni">📊</span><span>集計</span>
-    </div>
-    <div class="sp-nav-item" data-page="inv-history" onclick="spSwitchPage('inv-history',this)">
-      <span class="ni">🗂️</span><span>棚卸</span>
-    </div>
-  </nav>
-  <button class="fab" onclick="openForm()">＋</button>
-</div>
-
-<!-- ══════════ 登録/編集モーダル ══════════ -->
+<!-- 登録/編集モーダル -->
 <div class="modal-bg" id="form-modal">
   <div class="modal">
     <div class="modal-header">
@@ -365,7 +355,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   </div>
 </div>
 
-<!-- ══════════ 棚卸モーダル ══════════ -->
+<!-- 棚卸モーダル -->
 <div class="modal-bg" id="inv-modal">
   <div class="modal">
     <div class="modal-header">
@@ -378,7 +368,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
         <div class="field"><label>担当者</label><input id="inv-staff" placeholder="山田 花子"></div>
       </div>
       <div class="field" style="margin-top:12px"><label>備考</label>
-        <textarea id="inv-note" placeholder="棚卸時の特記事項" style="min-height:48px"></textarea></div>
+        <textarea id="inv-note" placeholder="特記事項" style="min-height:48px"></textarea></div>
       <div style="background:var(--blue-xl);border-radius:var(--radius-md);padding:14px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫台数</div>
           <div style="font-size:22px;font-weight:800;color:var(--blue)" id="inv-count-disp">—</div></div>
@@ -394,29 +384,166 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 </div>
 
 <script>
-// ── データストア ────────────────────────────────────
-const STORE_KEY = 'car_ledger_v3';
-const INV_KEY   = 'car_inv_v3';
-let data    = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-let invHist = JSON.parse(localStorage.getItem(INV_KEY)   || '[]');
-let editId  = null;
-let isMobile = false;
+// ══════════════════════════════════════════════════
+// 設定
+// ══════════════════════════════════════════════════
+const CLIENT_ID = '975505986998-eaajge0mhlu41o7ddvmud5ndg2qvrqkr.apps.googleusercontent.com';
+const SCOPES    = 'https://www.googleapis.com/auth/drive.appdata';
+const FILE_NAME = 'car_ledger_data.json';
 
-function persist(){
-  localStorage.setItem(STORE_KEY, JSON.stringify(data));
-  localStorage.setItem(INV_KEY,   JSON.stringify(invHist));
+// ══════════════════════════════════════════════════
+// 状態
+// ══════════════════════════════════════════════════
+let data      = [];
+let invHist   = [];
+let editId    = null;
+let isMobile  = false;
+let accessToken = null;
+let driveFileId = null;
+let syncTimer   = null;
+
+// ══════════════════════════════════════════════════
+// Google認証
+// ══════════════════════════════════════════════════
+function signIn(){
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if(resp.error){ showToast('❌ ログインに失敗しました'); return; }
+      accessToken = resp.access_token;
+      showLoading('データを読み込み中…');
+      await loadUserInfo();
+      await loadFromDrive();
+      showApp();
+    }
+  });
+  client.requestAccessToken();
 }
 
-// ── レイアウト切替 ──────────────────────────────────
+async function loadUserInfo(){
+  try{
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{
+      headers:{Authorization:'Bearer '+accessToken}
+    });
+    const u = await r.json();
+    ['pc-avatar'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el&&u.picture){el.src=u.picture;el.style.display='block';}
+    });
+  }catch(e){}
+}
+
+function signOut(){
+  if(!confirm('ログアウトしますか？')) return;
+  accessToken = null;
+  driveFileId = null;
+  data = []; invHist = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════════
+// Google Drive 読み書き
+// ══════════════════════════════════════════════════
+async function loadFromDrive(){
+  try{
+    setSyncBadge('ing','🔄 読み込み中');
+    // appDataフォルダ内のファイルを検索
+    const res = await fetch(
+      "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id,name)",
+      {headers:{Authorization:'Bearer '+accessToken}}
+    );
+    const json = await res.json();
+    if(json.files && json.files.length > 0){
+      driveFileId = json.files[0].id;
+      const content = await fetch(
+        'https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media',
+        {headers:{Authorization:'Bearer '+accessToken}}
+      );
+      const saved = await content.json();
+      data    = saved.data    || [];
+      invHist = saved.invHist || [];
+    } else {
+      // 初回：ファイル新規作成
+      await saveToDrive();
+    }
+    setSyncBadge('ok','✅ 同期済み');
+  }catch(e){
+    setSyncBadge('err','❌ 同期エラー');
+    showToast('❌ Driveの読み込みに失敗しました');
+  }
+}
+
+async function saveToDrive(){
+  try{
+    setSyncBadge('ing','🔄 保存中');
+    const body = JSON.stringify({data, invHist});
+    let res;
+    if(driveFileId){
+      // 更新
+      res = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',
+        {method:'PATCH', headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'}, body}
+      );
+    } else {
+      // 新規作成（appDataFolder）
+      const meta = JSON.stringify({name:FILE_NAME, parents:['appDataFolder']});
+      const form = new FormData();
+      form.append('metadata', new Blob([meta],{type:'application/json'}));
+      form.append('file',     new Blob([body],{type:'application/json'}));
+      res = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        {method:'POST', headers:{Authorization:'Bearer '+accessToken}, body:form}
+      );
+      const created = await res.json();
+      driveFileId = created.id;
+    }
+    setSyncBadge('ok','✅ 同期済み');
+  }catch(e){
+    setSyncBadge('err','❌ 同期エラー');
+    showToast('❌ Driveへの保存に失敗しました');
+  }
+}
+
+function debounceSave(){
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>saveToDrive(), 1500);
+}
+
+function setSyncBadge(type, text){
+  ['pc-sync-badge','sp-sync-badge'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.className='sync-badge sync-'+type;
+    el.textContent=text;
+  });
+}
+
+// ══════════════════════════════════════════════════
+// 画面制御
+// ══════════════════════════════════════════════════
+function showLoading(msg){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('loading-screen').style.display='flex';
+  document.getElementById('loading-msg').textContent=msg||'読み込み中…';
+}
+function showApp(){
+  document.getElementById('loading-screen').style.display='none';
+  const app=document.getElementById('app');
+  app.style.display='flex';
+  detectLayout();
+  renderAll();
+}
+
 function detectLayout(){
   isMobile = window.innerWidth < 768;
-  document.getElementById('pc-layout').style.display = isMobile ? 'none' : 'flex';
-  document.getElementById('sp-layout').style.display = isMobile ? 'flex' : 'none';
+  document.getElementById('pc-layout').style.display = isMobile?'none':'flex';
+  document.getElementById('sp-layout').style.display = isMobile?'flex':'none';
 }
-window.addEventListener('resize', ()=>{ detectLayout(); renderAll(); });
+window.addEventListener('resize',()=>{detectLayout();renderAll();});
 
-// ── ページ切替 ──────────────────────────────────────
-function switchPage(name, el){
+function switchPage(name,el){
   document.querySelectorAll('.pc-nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('#pc-layout .page').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
@@ -424,7 +551,7 @@ function switchPage(name, el){
   if(name==='stats') renderStats();
   if(name==='inv-history') renderInvHistory();
 }
-function spSwitchPage(name, el){
+function spSwitchPage(name,el){
   document.querySelectorAll('.sp-nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('#sp-layout .page').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
@@ -433,98 +560,87 @@ function spSwitchPage(name, el){
   if(name==='inv-history') renderInvHistory();
 }
 
-// ── ユーティリティ ──────────────────────────────────
-const fmt  = n => n ? '¥' + Number(n).toLocaleString() : '—';
-const fmtK = n => n ? Number(n).toLocaleString() + ' km' : '—';
+// ══════════════════════════════════════════════════
+// ユーティリティ
+// ══════════════════════════════════════════════════
+const fmt  = n => n?'¥'+Number(n).toLocaleString():'—';
+const fmtK = n => n?Number(n).toLocaleString()+' km':'—';
 function nextNo(){
-  const nums = data.map(d=>parseInt(d.no.replace('J-',''))||0);
-  return 'J-' + (Math.max(0,...nums)+1).toString().padStart(4,'0');
+  const nums=data.map(d=>parseInt(d.no.replace('J-',''))||0);
+  return 'J-'+(Math.max(0,...nums)+1).toString().padStart(4,'0');
 }
 function calcProfit(d){
-  if(!d.sell || !d.price) return null;
-  return Number(d.sell) - (Number(d.price)+(Number(d.misc)||0));
+  if(!d.sell||!d.price)return null;
+  return Number(d.sell)-(Number(d.price)+(Number(d.misc)||0));
 }
 function profitHTML(d){
-  const p = calcProfit(d);
-  if(p===null) return '—';
+  const p=calcProfit(d);
+  if(p===null)return '—';
   return `<span class="${p>=0?'profit-pos':'profit-neg'}">${fmt(p)}</span>`;
 }
 function badgeHTML(s){
-  const cls = s==='在庫中'?'badge-stock':s==='売約済'?'badge-reserve':'badge-sold';
+  const cls=s==='在庫中'?'badge-stock':s==='売約済'?'badge-reserve':'badge-sold';
   return `<span class="badge ${cls}">${s}</span>`;
 }
 function getFiltered(){
-  const q  = (document.getElementById(isMobile?'sp-search':'pc-search').value||'').toLowerCase();
-  const st = document.getElementById(isMobile?'sp-status':'pc-status').value;
-  const mk = isMobile ? '' : (document.getElementById('pc-maker').value||'');
+  const q=(document.getElementById(isMobile?'sp-search':'pc-search').value||'').toLowerCase();
+  const st=document.getElementById(isMobile?'sp-status':'pc-status').value;
+  const mk=isMobile?'':(document.getElementById('pc-maker').value||'');
   return data.filter(d=>{
-    const txt = (d.maker+d.model+(d.supplier||'')+(d.buyer||'')).toLowerCase();
-    return (!q||txt.includes(q)) && (!st||d.status===st) && (!mk||d.maker===mk);
+    const txt=(d.maker+d.model+(d.supplier||'')+(d.buyer||'')).toLowerCase();
+    return(!q||txt.includes(q))&&(!st||d.status===st)&&(!mk||d.maker===mk);
   });
 }
 
-// ── renderAll ──────────────────────────────────────
+// ══════════════════════════════════════════════════
+// 描画
+// ══════════════════════════════════════════════════
 function renderAll(){
   renderTopStats();
   if(isMobile) renderSPCards();
-  else { renderPCTable(); renderMakerFilter(); }
+  else{ renderPCTable(); renderMakerFilter(); }
 }
 
-// ── 上部統計 ──────────────────────────────────────
 function renderTopStats(){
-  const total   = data.length;
-  const inStock = data.filter(d=>d.status==='在庫中').length;
-  const reserve = data.filter(d=>d.status==='売約済').length;
-  const sold    = data.filter(d=>d.status==='販売済').length;
-  const profits = data.map(d=>calcProfit(d)).filter(p=>p!==null);
-  const totalP  = profits.reduce((s,p)=>s+p,0);
-  const html = `
+  const total=data.length;
+  const inStock=data.filter(d=>d.status==='在庫中').length;
+  const reserve=data.filter(d=>d.status==='売約済').length;
+  const sold=data.filter(d=>d.status==='販売済').length;
+  const profits=data.map(d=>calcProfit(d)).filter(p=>p!==null);
+  const totalP=profits.reduce((s,p)=>s+p,0);
+  const html=`
     <div class="stat-card"><div class="s-label">総仕入台数</div><div class="s-value">${total}<span class="s-unit"> 台</span></div></div>
     <div class="stat-card blue"><div class="s-label">在庫中</div><div class="s-value">${inStock}<span class="s-unit"> 台</span></div></div>
     <div class="stat-card amber"><div class="s-label">売約済</div><div class="s-value">${reserve}<span class="s-unit"> 台</span></div></div>
     <div class="stat-card green"><div class="s-label">販売済</div><div class="s-value">${sold}<span class="s-unit"> 台</span></div></div>
     <div class="stat-card ${totalP>=0?'green':'red'}"><div class="s-label">累計粗利</div><div class="s-value" style="font-size:18px">${fmt(totalP)}</div></div>`;
-  const pEl = document.getElementById('pc-stats-row');
-  const sEl = document.getElementById('sp-stats-row');
-  if(pEl) pEl.innerHTML = html;
-  if(sEl) sEl.innerHTML = html;
+  ['pc-stats-row','sp-stats-row'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
-// ── PCテーブル ──────────────────────────────────────
 function renderPCTable(){
-  const rows = getFiltered();
-  const empty = document.getElementById('pc-empty');
-  const tbody = document.getElementById('pc-tbody');
-  empty.style.display = rows.length ? 'none' : 'block';
-  tbody.innerHTML = rows.map(d=>`
+  const rows=getFiltered();
+  document.getElementById('pc-empty').style.display=rows.length?'none':'block';
+  document.getElementById('pc-tbody').innerHTML=rows.map(d=>`
     <tr>
-      <td><b>${d.no}</b></td>
-      <td>${d.date}</td>
-      <td>${d.maker}</td>
+      <td><b>${d.no}</b></td><td>${d.date}</td><td>${d.maker}</td>
       <td>${d.model}${d.year?' <small style="color:var(--gray-400)">'+d.year+'年</small>':''}</td>
-      <td>${d.year||'—'}</td>
-      <td>${fmtK(d.km)}</td>
-      <td>${fmt(d.price)}</td>
-      <td>${fmt(d.sell)}</td>
-      <td>${profitHTML(d)}</td>
-      <td style="font-size:11px">${d.buyer||'—'}</td>
+      <td>${d.year||'—'}</td><td>${fmtK(d.km)}</td>
+      <td>${fmt(d.price)}</td><td>${fmt(d.sell)}</td>
+      <td>${profitHTML(d)}</td><td style="font-size:11px">${d.buyer||'—'}</td>
       <td><b>${d.cond}</b></td>
       <td style="color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
       <td>${badgeHTML(d.status)}</td>
       <td style="white-space:nowrap;display:flex;gap:4px">
-        <button class="btn btn-outline btn-sm" onclick="openEdit('${d.id}')">✏️ 編集</button>
+        <button class="btn btn-outline btn-sm" onclick="openEdit('${d.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRec('${d.id}')">🗑</button>
       </td>
     </tr>`).join('');
 }
 
-// ── スマホカード ────────────────────────────────────
 function renderSPCards(){
-  const rows = getFiltered();
-  const empty = document.getElementById('sp-empty');
-  const el    = document.getElementById('sp-cards');
-  empty.style.display = rows.length ? 'none' : 'block';
-  el.innerHTML = rows.map(d=>`
+  const rows=getFiltered();
+  document.getElementById('sp-empty').style.display=rows.length?'none':'block';
+  document.getElementById('sp-cards').innerHTML=rows.map(d=>`
     <div class="car-card">
       <div class="car-card-header">
         <div>
@@ -547,81 +663,53 @@ function renderSPCards(){
     </div>`).join('');
 }
 
-// ── メーカーフィルター ──────────────────────────────
 function renderMakerFilter(){
-  const makers = [...new Set(data.map(d=>d.maker).filter(Boolean))].sort();
-  const sel = document.getElementById('pc-maker');
-  if(!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">全メーカー</option>' + makers.map(m=>`<option${m===cur?' selected':''}>${m}</option>`).join('');
+  const makers=[...new Set(data.map(d=>d.maker).filter(Boolean))].sort();
+  const sel=document.getElementById('pc-maker');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">全メーカー</option>'+makers.map(m=>`<option${m===cur?' selected':''}>${m}</option>`).join('');
 }
 
-// ── 集計タブ ───────────────────────────────────────
 function renderStats(){
-  const total   = data.length;
-  const inStock = data.filter(d=>d.status==='在庫中').length;
-  const reserve = data.filter(d=>d.status==='売約済').length;
-  const sold    = data.filter(d=>d.status==='販売済').length;
-  const profits = data.filter(d=>d.sell&&d.price).map(d=>calcProfit(d));
-  const totalP  = profits.reduce((s,p)=>s+p,0);
-  const avgP    = profits.length ? Math.round(totalP/profits.length) : 0;
-  const stockV  = data.filter(d=>d.status==='在庫中').reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  const totalC  = data.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-
-  const cards = `
+  const inStock=data.filter(d=>d.status==='在庫中').length;
+  const reserve=data.filter(d=>d.status==='売約済').length;
+  const sold=data.filter(d=>d.status==='販売済').length;
+  const total=data.length;
+  const profits=data.filter(d=>d.sell&&d.price).map(d=>calcProfit(d));
+  const totalP=profits.reduce((s,p)=>s+p,0);
+  const avgP=profits.length?Math.round(totalP/profits.length):0;
+  const stockV=data.filter(d=>d.status==='在庫中').reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  const totalC=data.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  const cards=`
     <div class="stat-card"><div class="s-label">仕入合計コスト</div><div class="s-value" style="font-size:18px">${fmt(totalC)}</div></div>
     <div class="stat-card blue"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:18px">${fmt(stockV)}</div></div>
     <div class="stat-card green"><div class="s-label">累計粗利</div><div class="s-value" style="font-size:18px;color:${totalP>=0?'var(--green)':'var(--red)'}">${fmt(totalP)}</div></div>
-    <div class="stat-card ${avgP>=0?'green':'red'}"><div class="s-label">平均粗利 / 台</div><div class="s-value" style="font-size:18px">${fmt(avgP)}</div></div>`;
-
-  ['pc-profit-cards','sp-profit-cards'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.innerHTML=cards;
-  });
-
-  const barData = [
-    {label:'在庫中', n:inStock, color:'#2176ae'},
-    {label:'売約済', n:reserve, color:'#b86a00'},
-    {label:'販売済', n:sold,    color:'#2d7a4f'},
-  ].filter(x=>x.n>0);
-
-  const barHTML = barData.map(x=>`<div style="flex:${x.n};background:${x.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${x.n}</div>`).join('');
-  const legendHTML = barData.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;background:${x.color};border-radius:2px;margin-right:4px"></span>${x.label} ${x.n}台</span>`).join('');
-
+    <div class="stat-card ${avgP>=0?'green':'red'}"><div class="s-label">平均粗利/台</div><div class="s-value" style="font-size:18px">${fmt(avgP)}</div></div>`;
+  ['pc-profit-cards','sp-profit-cards'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=cards;});
+  const bd=[{label:'在庫中',n:inStock,color:'#2176ae'},{label:'売約済',n:reserve,color:'#b86a00'},{label:'販売済',n:sold,color:'#2d7a4f'}].filter(x=>x.n>0);
+  const barH=bd.map(x=>`<div style="flex:${x.n};background:${x.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${x.n}</div>`).join('');
+  const legH=bd.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;background:${x.color};border-radius:2px;margin-right:4px"></span>${x.label} ${x.n}台</span>`).join('');
   ['pc','sp'].forEach(p=>{
-    const b=document.getElementById(p+'-status-bar');
-    const l=document.getElementById(p+'-status-legend');
-    if(b) b.innerHTML = total ? barHTML : '<div style="flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gray-400)">データなし</div>';
-    if(l) l.innerHTML = legendHTML;
+    const b=document.getElementById(p+'-status-bar');const l=document.getElementById(p+'-status-legend');
+    if(b)b.innerHTML=total?barH:'<div style="flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gray-400)">データなし</div>';
+    if(l)l.innerHTML=legH;
   });
-
-  const makerCount={};
-  data.forEach(d=>{if(d.maker)makerCount[d.maker]=(makerCount[d.maker]||0)+1});
-  const top = Object.entries(makerCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxC = top[0]?top[0][1]:1;
-  const makerHTML = top.map(([m,c])=>`
-    <div class="bar-chart-row">
-      <span class="label">${m}</span>
-      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(c/maxC*100)}%"><span>${c}</span></div></div>
-    </div>`).join('') || '<p style="font-size:12px;color:var(--gray-400)">データなし</p>';
-
-  ['pc','sp'].forEach(p=>{
-    const el=document.getElementById(p+'-maker-chart');
-    if(el) el.innerHTML=makerHTML;
-  });
+  const mc={};data.forEach(d=>{if(d.maker)mc[d.maker]=(mc[d.maker]||0)+1;});
+  const top=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxC=top[0]?top[0][1]:1;
+  const mH=top.map(([m,c])=>`<div class="bar-chart-row"><span class="label">${m}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(c/maxC*100)}%"><span>${c}</span></div></div></div>`).join('')||'<p style="font-size:12px;color:var(--gray-400)">データなし</p>';
+  ['pc','sp'].forEach(p=>{const el=document.getElementById(p+'-maker-chart');if(el)el.innerHTML=mH;});
 }
 
-// ── 棚卸履歴 ─────────────────────────────────────
 function renderInvHistory(){
-  const html = invHist.length === 0
-    ? '<div class="empty-state"><span class="ico">📋</span><p>棚卸履歴がありません</p></div>'
-    : invHist.slice().reverse().map(inv=>`
+  const html=invHist.length===0
+    ?'<div class="empty-state"><span class="ico">📋</span><p>棚卸履歴がありません</p></div>'
+    :invHist.slice().reverse().map(inv=>`
       <div class="inv-record">
-        <div class="inv-record-header">
-          <div>
-            <span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span>
-            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">担当：${inv.staff||'—'}</div>
-          </div>
-          <span class="inv-badge">在庫 ${inv.count}台</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+          <div><span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:2px">担当：${inv.staff||'—'}</div></div>
+          <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">在庫 ${inv.count}台</span>
         </div>
         <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
           <div class="stat-card card-sm"><div class="s-label">在庫台数</div><div class="s-value">${inv.count}<span class="s-unit"> 台</span></div></div>
@@ -637,7 +725,6 @@ function renderInvHistory(){
                 <th style="background:var(--navy);color:#fff;padding:6px 8px">仕入番号</th>
                 <th style="background:var(--navy);color:#fff;padding:6px 8px">メーカー</th>
                 <th style="background:var(--navy);color:#fff;padding:6px 8px">車種</th>
-                <th style="background:var(--navy);color:#fff;padding:6px 8px">年式</th>
                 <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right">仕入価格</th>
               </tr></thead>
               <tbody>${inv.snapshot.map((s,i)=>`
@@ -645,7 +732,6 @@ function renderInvHistory(){
                   <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no}</td>
                   <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker}</td>
                   <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model}</td>
-                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.year||'—'}</td>
                   <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(s.price)}</td>
                 </tr>`).join('')}
               </tbody>
@@ -653,109 +739,101 @@ function renderInvHistory(){
           </div>
         </details>`:''}
       </div>`).join('');
-  ['pc-inv-list','sp-inv-list'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.innerHTML=html;
-  });
+  ['pc-inv-list','sp-inv-list'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
-// ── フォーム操作 ────────────────────────────────────
+// ══════════════════════════════════════════════════
+// フォーム操作
+// ══════════════════════════════════════════════════
 function openForm(){
-  editId = null;
-  document.getElementById('modal-title').textContent = '新規仕入れ登録';
+  editId=null;
+  document.getElementById('modal-title').textContent='新規仕入れ登録';
   ['maker','model','year','vin','km','color','supplier','price','misc','buyer','sell','sell-date','note'].forEach(f=>{
     const el=document.getElementById('f-'+f);if(el)el.value='';
   });
-  document.getElementById('f-no').value = nextNo();
-  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('f-cond').value = 'A';
-  document.getElementById('f-repair').value = 'なし';
-  document.getElementById('f-status-sel').value = '在庫中';
+  document.getElementById('f-no').value=nextNo();
+  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-cond').value='A';
+  document.getElementById('f-repair').value='なし';
+  document.getElementById('f-status-sel').value='在庫中';
   openModal('form-modal');
 }
 function openEdit(id){
-  const d = data.find(x=>x.id===id); if(!d) return;
-  editId = id;
-  document.getElementById('modal-title').textContent = '仕入れ情報を編集';
-  const map = {no:d.no,date:d.date,maker:d.maker,model:d.model,year:d.year||'',
-    vin:d.vin||'',km:d.km||'',color:d.color||'',supplier:d.supplier||'',
-    price:d.price||'',misc:d.misc||'',buyer:d.buyer||'',sell:d.sell||'',
-    'sell-date':d.sellDate||'',note:d.note||''};
+  const d=data.find(x=>x.id===id);if(!d)return;
+  editId=id;
+  document.getElementById('modal-title').textContent='仕入れ情報を編集';
+  const map={no:d.no,date:d.date,maker:d.maker,model:d.model,year:d.year||'',vin:d.vin||'',
+    km:d.km||'',color:d.color||'',supplier:d.supplier||'',price:d.price||'',misc:d.misc||'',
+    buyer:d.buyer||'',sell:d.sell||'','sell-date':d.sellDate||'',note:d.note||''};
   Object.entries(map).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;});
-  document.getElementById('f-cond').value = d.cond||'A';
-  document.getElementById('f-repair').value = d.repair||'なし';
-  document.getElementById('f-status-sel').value = d.status||'在庫中';
+  document.getElementById('f-cond').value=d.cond||'A';
+  document.getElementById('f-repair').value=d.repair||'なし';
+  document.getElementById('f-status-sel').value=d.status||'在庫中';
   openModal('form-modal');
 }
 function saveRecord(){
-  const date  = document.getElementById('f-date').value;
-  const maker = document.getElementById('f-maker').value.trim();
-  const model = document.getElementById('f-model').value.trim();
-  const price = document.getElementById('f-price').value;
+  const date=document.getElementById('f-date').value;
+  const maker=document.getElementById('f-maker').value.trim();
+  const model=document.getElementById('f-model').value.trim();
+  const price=document.getElementById('f-price').value;
   if(!date||!maker||!model||!price){showToast('⚠ 仕入日・メーカー・車種・仕入価格は必須です');return;}
-  const rec = {
-    id: editId || (Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
-    no: document.getElementById('f-no').value, date, maker, model,
-    year:    document.getElementById('f-year').value,
-    vin:     document.getElementById('f-vin').value,
-    km:      document.getElementById('f-km').value,
-    color:   document.getElementById('f-color').value,
-    supplier:document.getElementById('f-supplier').value,
-    price, misc: document.getElementById('f-misc').value,
-    buyer:   document.getElementById('f-buyer').value,
-    sell:    document.getElementById('f-sell').value,
-    sellDate:document.getElementById('f-sell-date').value,
-    cond:    document.getElementById('f-cond').value,
-    repair:  document.getElementById('f-repair').value,
-    status:  document.getElementById('f-status-sel').value,
-    note:    document.getElementById('f-note').value,
+  const rec={
+    id:editId||(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    no:document.getElementById('f-no').value,date,maker,model,
+    year:document.getElementById('f-year').value,vin:document.getElementById('f-vin').value,
+    km:document.getElementById('f-km').value,color:document.getElementById('f-color').value,
+    supplier:document.getElementById('f-supplier').value,price,
+    misc:document.getElementById('f-misc').value,buyer:document.getElementById('f-buyer').value,
+    sell:document.getElementById('f-sell').value,sellDate:document.getElementById('f-sell-date').value,
+    cond:document.getElementById('f-cond').value,repair:document.getElementById('f-repair').value,
+    status:document.getElementById('f-status-sel').value,note:document.getElementById('f-note').value,
   };
-  if(editId){ const i=data.findIndex(x=>x.id===editId); data[i]=rec; }
-  else data.push(rec);
-  persist();
+  if(editId){const i=data.findIndex(x=>x.id===editId);data[i]=rec;}else data.push(rec);
   closeModal('form-modal');
   renderAll();
-  showToast(editId ? '✅ 更新しました' : '✅ 登録しました');
+  showToast(editId?'✅ 更新しました':'✅ 登録しました');
+  debounceSave();
 }
 function deleteRec(id){
-  if(!confirm('この記録を削除しますか？')) return;
-  data = data.filter(x=>x.id!==id);
-  persist();
-  renderAll();
-  showToast('🗑 削除しました');
+  if(!confirm('この記録を削除しますか？'))return;
+  data=data.filter(x=>x.id!==id);
+  renderAll();showToast('🗑 削除しました');debounceSave();
 }
 
-// ── 棚卸 ────────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// 棚卸
+// ══════════════════════════════════════════════════
 function showInvModal(){
-  const stocks = data.filter(d=>d.status==='在庫中');
-  const val = stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  document.getElementById('inv-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('inv-staff').value = '';
-  document.getElementById('inv-note').value = '';
-  document.getElementById('inv-count-disp').textContent = stocks.length + ' 台';
-  document.getElementById('inv-val-disp').textContent = fmt(val);
+  const stocks=data.filter(d=>d.status==='在庫中');
+  const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  document.getElementById('inv-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('inv-staff').value='';
+  document.getElementById('inv-note').value='';
+  document.getElementById('inv-count-disp').textContent=stocks.length+' 台';
+  document.getElementById('inv-val-disp').textContent=fmt(val);
   openModal('inv-modal');
 }
 function execInventory(){
-  const date = document.getElementById('inv-date').value;
+  const date=document.getElementById('inv-date').value;
   if(!date){showToast('⚠ 棚卸日を入力してください');return;}
-  const stocks = data.filter(d=>d.status==='在庫中');
-  const val = stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  const stocks=data.filter(d=>d.status==='在庫中');
+  const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   invHist.push({
-    id: Date.now().toString(36),
-    date, staff: document.getElementById('inv-staff').value,
-    note: document.getElementById('inv-note').value,
-    count: stocks.length, value: val,
-    snapshot: stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))
+    id:Date.now().toString(36),date,
+    staff:document.getElementById('inv-staff').value,
+    note:document.getElementById('inv-note').value,
+    count:stocks.length,value:val,
+    snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))
   });
-  persist();
-  closeModal('inv-modal');
-  showToast('✅ 棚卸を保存しました');
+  closeModal('inv-modal');showToast('✅ 棚卸を保存しました');debounceSave();
 }
 
-// ── CSV出力 ─────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// CSV出力
+// ══════════════════════════════════════════════════
 function exportCSV(){
   if(!data.length){showToast('⚠ データがありません');return;}
-  const rows = [['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号',
+  const rows=[['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号',
     '仕入先','仕入価格(円)','諸費用(円)','仕入合計(円)','販売先','販売価格(円)','粗利(円)',
     '販売日','車両状態','修復歴','ステータス','備考']];
   data.forEach(d=>{
@@ -766,48 +844,28 @@ function exportCSV(){
       d.buyer||'',d.sell?Number(d.sell):'',profit,d.sellDate||'',
       d.cond,d.repair,d.status,d.note||'']);
   });
-  const csv = rows.map(r=>r.map(c=>{
+  const csv=rows.map(r=>r.map(c=>{
     const s=String(c??'');
     return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
   }).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
   showToast('📥 CSVを出力しました');
 }
 
-// ── モーダル ─────────────────────────────────────────
-function openModal(id){
-  const el=document.getElementById(id);
-  el.classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow='';
-}
-document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg)closeModal(bg.id);});
-});
-
-// ── トースト ─────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// モーダル・トースト
+// ══════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)closeModal(bg.id);});});
 let toastTimer;
 function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
-
-// ── 初期化 ─────────────────────────────────────────
-function init(){
-  detectLayout();
-  renderAll();
-}
-init();
 </script>
 </body>
 </html>
