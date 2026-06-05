@@ -9,8 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --navy:#1a3a5c;--navy-d:#0f2540;
-  --blue:#2176ae;--blue-l:#4a9fd4;--blue-xl:#e8f4fd;
+  --navy:#1a3a5c;--blue:#2176ae;--blue-xl:#e8f4fd;
   --green:#2d7a4f;--green-l:#e8f5ee;
   --amber:#b86a00;--amber-l:#fff8e6;
   --red:#b83232;--red-l:#fdecea;
@@ -18,32 +17,26 @@
   --gray-400:#9ca3af;--gray-600:#4b5563;--gray-800:#1f2937;
   --white:#ffffff;
   --radius-sm:6px;--radius-md:10px;--radius-lg:16px;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
-  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.12);
   --font:'Hiragino Kaku Gothic ProN','Hiragino Sans','Meiryo','Yu Gothic',sans-serif;
 }
 html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:var(--gray-800);font-size:14px}
-
-/* ログイン画面 */
+/* ログイン */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:24px;background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%)}
-#login-screen .login-card{background:var(--white);border-radius:var(--radius-lg);padding:40px 36px;box-shadow:var(--shadow-md);text-align:center;width:min(360px,90vw)}
-#login-screen h1{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px}
-#login-screen p{font-size:13px;color:var(--gray-400);margin-bottom:28px;line-height:1.6}
+.login-card{background:var(--white);border-radius:var(--radius-lg);padding:40px 36px;box-shadow:var(--shadow-md);text-align:center;width:min(360px,90vw)}
+.login-card h1{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.login-card p{font-size:13px;color:var(--gray-400);margin-bottom:28px;line-height:1.6}
 .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--white);font-family:var(--font);font-size:14px;font-weight:600;color:var(--gray-800);cursor:pointer;transition:all .15s}
 .google-btn:hover{background:var(--gray-50);border-color:var(--blue)}
 .google-btn img{width:20px;height:20px}
 .login-note{font-size:11px;color:rgba(255,255,255,.6);text-align:center}
-
 /* ローディング */
 #loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--gray-100)}
 .spinner{width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #loading-screen p{font-size:13px;color:var(--gray-400)}
-
-/* メインアプリ */
+/* アプリ */
 #app{display:none;height:100vh;flex-direction:column}
-
-/* PC レイアウト */
 .pc-layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .pc-header{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
 .pc-header h1{font-size:17px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
@@ -53,33 +46,24 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .pc-nav-item{display:flex;align-items:center;gap:10px;padding:13px 20px;cursor:pointer;font-size:13px;color:var(--gray-600);border-left:3px solid transparent;transition:all .15s}
 .pc-nav-item:hover{background:var(--blue-xl);color:var(--blue)}
 .pc-nav-item.active{background:var(--blue-xl);color:var(--blue);font-weight:600;border-left-color:var(--blue)}
-.pc-nav-item .ni{font-size:18px}
 .pc-main{flex:1;overflow-y:auto;padding:24px}
-
-/* スマホ レイアウト */
 .sp-layout{display:flex;flex-direction:column;height:100vh}
 .sp-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sp-header h1{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
 .sp-body{flex:1;overflow-y:auto;padding:12px;padding-bottom:80px}
 .sp-bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--gray-200);display:flex;z-index:50;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
-.sp-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;font-size:10px;color:var(--gray-400);gap:3px;transition:color .15s}
+.sp-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;font-size:10px;color:var(--gray-400);gap:3px}
 .sp-nav-item.active{color:var(--blue)}
 .sp-nav-item .ni{font-size:22px}
-
-/* 共通 */
 .page{display:none}.page.active{display:block}
 .card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);padding:20px;margin-bottom:16px}
 .card-sm{padding:14px}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-primary:hover{background:var(--navy)}
-.btn-outline{background:var(--white);color:var(--gray-800);border-color:var(--gray-200)}
-.btn-outline:hover{background:var(--gray-100)}
-.btn-danger{background:var(--white);color:var(--red);border-color:#fca5a5}
-.btn-danger:hover{background:var(--red-l)}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--navy)}
+.btn-outline{background:var(--white);color:var(--gray-800);border-color:var(--gray-200)}.btn-outline:hover{background:var(--gray-100)}
+.btn-danger{background:var(--white);color:var(--red);border-color:#fca5a5}.btn-danger:hover{background:var(--red-l)}
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:var(--radius-sm)}
-.btn-icon{padding:6px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--white);cursor:pointer;font-size:18px;color:var(--gray-600);transition:all .15s}
-.btn-icon:hover{background:var(--gray-100)}
+.btn-icon{padding:6px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);background:var(--white);cursor:pointer;font-size:18px;color:var(--gray-600)}
 .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-stock{background:var(--blue-xl);color:var(--blue)}
 .badge-reserve{background:var(--amber-l);color:var(--amber)}
@@ -87,17 +71,16 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:11px;font-weight:600;color:var(--gray-600);letter-spacing:.03em}
-.field input,.field select,.field textarea{padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;color:var(--gray-800);background:var(--white);transition:border-color .15s;-webkit-appearance:none}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(33,118,174,.1)}
+.field label{font-size:11px;font-weight:600;color:var(--gray-600)}
+.field input,.field select,.field textarea{padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:14px;color:var(--gray-800);background:var(--white);-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue)}
 .field input[readonly]{background:var(--gray-100);color:var(--gray-400)}
 .field textarea{resize:vertical;min-height:64px;line-height:1.5}
-.sec-label{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.08em;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-xl)}
+.sec-label{font-size:11px;font-weight:700;color:var(--blue);margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--blue-xl)}
 .tbl-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--gray-200)}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:860px}
 thead th{background:var(--navy);color:#fff;padding:9px 10px;font-weight:600;font-size:11px;white-space:nowrap;text-align:left}
-tbody tr{border-bottom:1px solid var(--gray-200);transition:background .1s}
-tbody tr:last-child{border-bottom:none}
+tbody tr{border-bottom:1px solid var(--gray-200)}
 tbody tr:hover{background:var(--blue-xl)}
 tbody td{padding:8px 10px;vertical-align:middle}
 tbody tr:nth-child(even){background:var(--gray-50)}
@@ -115,10 +98,8 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 .stat-card .s-label{font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px}
 .stat-card .s-value{font-size:24px;font-weight:800}
 .stat-card .s-unit{font-size:13px;font-weight:400;color:var(--gray-400)}
-.stat-card.blue .s-value{color:var(--blue)}
-.stat-card.green .s-value{color:var(--green)}
-.stat-card.amber .s-value{color:var(--amber)}
-.stat-card.red .s-value{color:var(--red)}
+.stat-card.blue .s-value{color:var(--blue)}.stat-card.green .s-value{color:var(--green)}
+.stat-card.amber .s-value{color:var(--amber)}.stat-card.red .s-value{color:var(--red)}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--white);border-radius:var(--radius-lg);width:min(700px,100%);box-shadow:var(--shadow-md);margin:auto}
@@ -126,8 +107,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 .modal-header h2{font-size:15px;font-weight:700}
 .modal-body{padding:20px}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end}
-.fab{position:fixed;bottom:76px;right:16px;z-index:100;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(33,118,174,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.fab:active{transform:scale(.92)}
+.fab{position:fixed;bottom:76px;right:16px;z-index:100;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(33,118,174,.4);display:flex;align-items:center;justify-content:center}
 .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .filter-bar input,.filter-bar select{padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--white);color:var(--gray-800)}
 .filter-bar input{flex:1;min-width:160px}
@@ -136,14 +116,11 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 .bar-chart-row .bar-wrap{flex:1;background:var(--gray-100);border-radius:4px;height:20px;overflow:hidden}
 .bar-chart-row .bar-fill{height:100%;background:var(--blue);border-radius:4px;display:flex;align-items:center;padding-left:6px;min-width:24px}
 .bar-chart-row .bar-fill span{font-size:11px;color:#fff;font-weight:600}
-.inv-record{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
-.profit-pos{color:var(--green);font-weight:700}
-.profit-neg{color:var(--red);font-weight:700}
+.profit-pos{color:var(--green);font-weight:700}.profit-neg{color:var(--red);font-weight:700}
 .sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
-.sync-ok{background:#e8f5ee;color:var(--green)}
-.sync-ing{background:#fff8e6;color:var(--amber)}
-.sync-err{background:#fdecea;color:var(--red)}
-.user-avatar{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.sync-ok{background:#e8f5ee;color:var(--green)}.sync-ing{background:#fff8e6;color:var(--amber)}.sync-err{background:#fdecea;color:var(--red)}
+.user-info{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.8)}
+.user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:300;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty-state{text-align:center;padding:48px 20px;color:var(--gray-400)}
@@ -155,18 +132,11 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   .stat-grid{grid-template-columns:1fr 1fr}
   .stat-card .s-value{font-size:20px}
 }
-@media(max-width:400px){
-  .form-grid{grid-template-columns:1fr}
-  .form-grid-2{grid-template-columns:1fr}
-}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:3px}
+@media(max-width:400px){.form-grid{grid-template-columns:1fr}.form-grid-2{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:3px}
 </style>
 </head>
 <body>
-
-<!-- トースト -->
 <div class="toast" id="toast"></div>
 
 <!-- ログイン画面 -->
@@ -174,13 +144,13 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   <div class="login-card">
     <div style="font-size:40px;margin-bottom:12px">🚗</div>
     <h1>中古車仕入台帳</h1>
-    <p>Googleアカウントでログインしてください。<br>データはGoogle Driveに保存されます。</p>
+    <p>Googleアカウントでログインしてください。<br>データは全員で共有されます。</p>
     <button class="google-btn" onclick="signIn()">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
       Googleでログイン
     </button>
   </div>
-  <p class="login-note">データはあなたのGoogle Driveにのみ保存されます</p>
+  <p class="login-note">データはFirebaseに保存・全員で共有されます</p>
 </div>
 
 <!-- ローディング -->
@@ -191,17 +161,16 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 
 <!-- メインアプリ -->
 <div id="app">
-
-  <!-- PC レイアウト -->
+  <!-- PC -->
   <div class="pc-layout" id="pc-layout" style="display:none">
     <header class="pc-header">
       <h1>🚗 中古車仕入台帳</h1>
       <div class="pc-header-right">
         <span class="sync-badge sync-ok" id="pc-sync-badge">✅ 同期済み</span>
+        <div class="user-info"><img id="pc-avatar" class="user-avatar" src="" alt="" style="display:none"><span id="pc-username"></span></div>
         <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
         <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
         <button class="btn btn-primary btn-sm" onclick="openForm()">＋ 新規登録</button>
-        <img id="pc-avatar" class="user-avatar" src="" alt="user" style="display:none">
         <button class="btn btn-outline btn-sm" onclick="signOut()">ログアウト</button>
       </div>
     </header>
@@ -216,45 +185,27 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
           <div id="pc-stats-row" class="stat-grid" style="grid-template-columns:repeat(5,1fr)"></div>
           <div class="filter-bar">
             <input type="text" id="pc-search" placeholder="🔍 車種・仕入先・販売先で検索…" oninput="renderAll()">
-            <select id="pc-status" onchange="renderAll()">
-              <option value="">すべてのステータス</option>
-              <option>在庫中</option><option>売約済</option><option>販売済</option>
-            </select>
+            <select id="pc-status" onchange="renderAll()"><option value="">すべてのステータス</option><option>在庫中</option><option>売約済</option><option>販売済</option></select>
             <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
           </div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr>
-                <th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
-                <th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th>
-                <th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th>
-                <th>ステータス</th><th>操作</th>
-              </tr></thead>
+              <thead><tr><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th><th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th><th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th><th>ステータス</th><th>操作</th></tr></thead>
               <tbody id="pc-tbody"></tbody>
             </table>
           </div>
-          <div id="pc-empty" class="empty-state" style="display:none">
-            <span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p>
-          </div>
+          <div id="pc-empty" class="empty-state" style="display:none"><span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p></div>
         </div>
         <div class="page" id="page-stats">
           <div id="pc-profit-cards" class="stat-grid"></div>
-          <div class="card">
-            <div class="sec-label">ステータス内訳</div>
-            <div id="pc-status-bar" style="display:flex;height:28px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
-            <div id="pc-status-legend" style="display:flex;gap:16px;font-size:12px;color:var(--gray-400)"></div>
-          </div>
-          <div class="card">
-            <div class="sec-label">メーカー別仕入台数</div>
-            <div id="pc-maker-chart"></div>
-          </div>
+          <div class="card"><div class="sec-label">ステータス内訳</div><div id="pc-status-bar" style="display:flex;height:28px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div><div id="pc-status-legend" style="display:flex;gap:16px;font-size:12px;color:var(--gray-400)"></div></div>
+          <div class="card"><div class="sec-label">メーカー別仕入台数</div><div id="pc-maker-chart"></div></div>
         </div>
         <div class="page" id="page-inv-history"><div id="pc-inv-list"></div></div>
       </main>
     </div>
   </div>
-
-  <!-- スマホ レイアウト -->
+  <!-- スマホ -->
   <div class="sp-layout" id="sp-layout" style="display:none">
     <header class="sp-header">
       <h1>🚗 中古車仕入台帳</h1>
@@ -270,27 +221,15 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
         <div id="sp-stats-row" class="stat-grid"></div>
         <div class="filter-bar" style="gap:6px">
           <input type="text" id="sp-search" placeholder="🔍 検索…" oninput="renderAll()" style="flex:1">
-          <select id="sp-status" onchange="renderAll()" style="width:100px">
-            <option value="">すべて</option>
-            <option>在庫中</option><option>売約済</option><option>販売済</option>
-          </select>
+          <select id="sp-status" onchange="renderAll()" style="width:100px"><option value="">すべて</option><option>在庫中</option><option>売約済</option><option>販売済</option></select>
         </div>
         <div id="sp-cards"></div>
-        <div id="sp-empty" class="empty-state" style="display:none">
-          <span class="ico">📭</span><p>データがありません</p>
-        </div>
+        <div id="sp-empty" class="empty-state" style="display:none"><span class="ico">📭</span><p>データがありません</p></div>
       </div>
       <div class="page" id="sp-page-stats">
         <div id="sp-profit-cards" class="stat-grid"></div>
-        <div class="card card-sm">
-          <div class="sec-label">ステータス内訳</div>
-          <div id="sp-status-bar" style="display:flex;height:24px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div>
-          <div id="sp-status-legend" style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);flex-wrap:wrap"></div>
-        </div>
-        <div class="card card-sm">
-          <div class="sec-label">メーカー別仕入台数</div>
-          <div id="sp-maker-chart"></div>
-        </div>
+        <div class="card card-sm"><div class="sec-label">ステータス内訳</div><div id="sp-status-bar" style="display:flex;height:24px;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px"></div><div id="sp-status-legend" style="display:flex;gap:12px;font-size:11px;color:var(--gray-400);flex-wrap:wrap"></div></div>
+        <div class="card card-sm"><div class="sec-label">メーカー別仕入台数</div><div id="sp-maker-chart"></div></div>
       </div>
       <div class="page" id="sp-page-inv-history"><div id="sp-inv-list"></div></div>
     </main>
@@ -306,10 +245,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 <!-- 登録/編集モーダル -->
 <div class="modal-bg" id="form-modal">
   <div class="modal">
-    <div class="modal-header">
-      <h2 id="modal-title">新規仕入れ登録</h2>
-      <button class="btn-icon" onclick="closeModal('form-modal')">✕</button>
-    </div>
+    <div class="modal-header"><h2 id="modal-title">新規仕入れ登録</h2><button class="btn-icon" onclick="closeModal('form-modal')">✕</button></div>
     <div class="modal-body">
       <div class="sec-label">管理情報</div>
       <div class="form-grid-2">
@@ -339,12 +275,9 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
       </div>
       <div class="sec-label">状態・ステータス</div>
       <div class="form-grid">
-        <div class="field"><label>車両状態</label>
-          <select id="f-cond"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
-        <div class="field"><label>修復歴</label>
-          <select id="f-repair"><option value="なし">なし</option><option value="あり">あり</option></select></div>
-        <div class="field"><label>ステータス</label>
-          <select id="f-status-sel"><option>在庫中</option><option>売約済</option><option>販売済</option></select></div>
+        <div class="field"><label>車両状態</label><select id="f-cond"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        <div class="field"><label>修復歴</label><select id="f-repair"><option value="なし">なし</option><option value="あり">あり</option></select></div>
+        <div class="field"><label>ステータス</label><select id="f-status-sel"><option>在庫中</option><option>売約済</option><option>販売済</option></select></div>
       </div>
       <div class="field" style="margin-top:12px"><label>備考</label><textarea id="f-note" placeholder="特記事項があれば入力"></textarea></div>
     </div>
@@ -358,22 +291,16 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 <!-- 棚卸モーダル -->
 <div class="modal-bg" id="inv-modal">
   <div class="modal">
-    <div class="modal-header">
-      <h2>棚卸の実施</h2>
-      <button class="btn-icon" onclick="closeModal('inv-modal')">✕</button>
-    </div>
+    <div class="modal-header"><h2>棚卸の実施</h2><button class="btn-icon" onclick="closeModal('inv-modal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid-2">
         <div class="field"><label>棚卸日 ＊</label><input id="inv-date" type="date"></div>
         <div class="field"><label>担当者</label><input id="inv-staff" placeholder="山田 花子"></div>
       </div>
-      <div class="field" style="margin-top:12px"><label>備考</label>
-        <textarea id="inv-note" placeholder="特記事項" style="min-height:48px"></textarea></div>
+      <div class="field" style="margin-top:12px"><label>備考</label><textarea id="inv-note" placeholder="特記事項" style="min-height:48px"></textarea></div>
       <div style="background:var(--blue-xl);border-radius:var(--radius-md);padding:14px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫台数</div>
-          <div style="font-size:22px;font-weight:800;color:var(--blue)" id="inv-count-disp">—</div></div>
-        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫評価額</div>
-          <div style="font-size:18px;font-weight:800;color:var(--blue)" id="inv-val-disp">—</div></div>
+        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫台数</div><div style="font-size:22px;font-weight:800;color:var(--blue)" id="inv-count-disp">—</div></div>
+        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫評価額</div><div style="font-size:18px;font-weight:800;color:var(--blue)" id="inv-val-disp">—</div></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -384,27 +311,23 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-// 設定
-// ══════════════════════════════════════════════════
-const CLIENT_ID = '975505986998-eaajge0mhlu41o7ddvmud5ndg2qvrqkr.apps.googleusercontent.com';
-const SCOPES    = 'https://www.googleapis.com/auth/drive.appdata';
-const FILE_NAME = 'car_ledger_data.json';
+// ══════════════════════════════════════════
+// 設定（Firebase + Google OAuth）
+// ══════════════════════════════════════════
+const CLIENT_ID  = '975505986998-eaajge0mhlu41o7ddvmud5ndg2qvrqkr.apps.googleusercontent.com';
+const DB_URL     = 'https://car-ledger-5f680-default-rtdb.firebaseio.com';
+const SCOPES     = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 
-// ══════════════════════════════════════════════════
-// 状態
-// ══════════════════════════════════════════════════
-let data      = [];
-let invHist   = [];
-let editId    = null;
-let isMobile  = false;
-let accessToken = null;
-let driveFileId = null;
-let syncTimer   = null;
+let data       = [];
+let invHist    = [];
+let editId     = null;
+let isMobile   = false;
+let accessToken= null;
+let syncTimer  = null;
 
-// ══════════════════════════════════════════════════
-// Google認証
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
+// 認証
+// ══════════════════════════════════════════
 function signIn(){
   const client = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
@@ -414,7 +337,7 @@ function signIn(){
       accessToken = resp.access_token;
       showLoading('データを読み込み中…');
       await loadUserInfo();
-      await loadFromDrive();
+      await loadFromDB();
       showApp();
     }
   });
@@ -423,95 +346,67 @@ function signIn(){
 
 async function loadUserInfo(){
   try{
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{
-      headers:{Authorization:'Bearer '+accessToken}
-    });
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
     const u = await r.json();
-    ['pc-avatar'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el&&u.picture){el.src=u.picture;el.style.display='block';}
-    });
+    const av = document.getElementById('pc-avatar');
+    const nm = document.getElementById('pc-username');
+    if(av && u.picture){ av.src=u.picture; av.style.display='block'; }
+    if(nm) nm.textContent = u.name || u.email || '';
   }catch(e){}
 }
 
 function signOut(){
   if(!confirm('ログアウトしますか？')) return;
-  accessToken = null;
-  driveFileId = null;
-  data = []; invHist = [];
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
+  accessToken=null; data=[]; invHist=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
 }
 
-// ══════════════════════════════════════════════════
-// Google Drive 読み書き
-// ══════════════════════════════════════════════════
-async function loadFromDrive(){
+// ══════════════════════════════════════════
+// Firebase Realtime Database 読み書き
+// ══════════════════════════════════════════
+async function loadFromDB(){
   try{
     setSyncBadge('ing','🔄 読み込み中');
-    // appDataフォルダ内のファイルを検索
-    const res = await fetch(
-      "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id,name)",
-      {headers:{Authorization:'Bearer '+accessToken}}
-    );
-    const json = await res.json();
-    if(json.files && json.files.length > 0){
-      driveFileId = json.files[0].id;
-      const content = await fetch(
-        'https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media',
-        {headers:{Authorization:'Bearer '+accessToken}}
-      );
-      const saved = await content.json();
-      data    = saved.data    || [];
-      invHist = saved.invHist || [];
-    } else {
-      // 初回：ファイル新規作成
-      await saveToDrive();
+    const r = await fetch(DB_URL+'/ledger.json');
+    const json = await r.json();
+    if(json){
+      data    = json.data    ? Object.values(json.data)    : [];
+      invHist = json.invHist ? Object.values(json.invHist) : [];
     }
     setSyncBadge('ok','✅ 同期済み');
   }catch(e){
-    setSyncBadge('err','❌ 同期エラー');
-    showToast('❌ Driveの読み込みに失敗しました');
+    setSyncBadge('err','❌ 読込エラー');
+    showToast('❌ データの読み込みに失敗しました');
   }
 }
 
-async function saveToDrive(){
+async function saveToDB(){
   try{
     setSyncBadge('ing','🔄 保存中');
-    const body = JSON.stringify({data, invHist});
-    let res;
-    if(driveFileId){
-      // 更新
-      res = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',
-        {method:'PATCH', headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'}, body}
-      );
-    } else {
-      // 新規作成（appDataFolder）
-      const meta = JSON.stringify({name:FILE_NAME, parents:['appDataFolder']});
-      const form = new FormData();
-      form.append('metadata', new Blob([meta],{type:'application/json'}));
-      form.append('file',     new Blob([body],{type:'application/json'}));
-      res = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
-        {method:'POST', headers:{Authorization:'Bearer '+accessToken}, body:form}
-      );
-      const created = await res.json();
-      driveFileId = created.id;
-    }
+    // 配列をオブジェクトに変換（Firebase推奨形式）
+    const dataObj    = {};
+    data.forEach(d=>{ dataObj[d.id]=d; });
+    const invHistObj = {};
+    invHist.forEach(i=>{ invHistObj[i.id]=i; });
+    await fetch(DB_URL+'/ledger.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({data:dataObj, invHist:invHistObj})
+    });
     setSyncBadge('ok','✅ 同期済み');
   }catch(e){
-    setSyncBadge('err','❌ 同期エラー');
-    showToast('❌ Driveへの保存に失敗しました');
+    setSyncBadge('err','❌ 保存エラー');
+    showToast('❌ 保存に失敗しました。接続を確認してください。');
   }
 }
 
 function debounceSave(){
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=>saveToDrive(), 1500);
+  syncTimer = setTimeout(()=>saveToDB(), 1000);
 }
 
-function setSyncBadge(type, text){
+function setSyncBadge(type,text){
   ['pc-sync-badge','sp-sync-badge'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;
@@ -520,9 +415,9 @@ function setSyncBadge(type, text){
   });
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // 画面制御
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function showLoading(msg){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('loading-screen').style.display='flex';
@@ -532,14 +427,12 @@ function showApp(){
   document.getElementById('loading-screen').style.display='none';
   const app=document.getElementById('app');
   app.style.display='flex';
-  detectLayout();
-  renderAll();
+  detectLayout(); renderAll();
 }
-
 function detectLayout(){
-  isMobile = window.innerWidth < 768;
-  document.getElementById('pc-layout').style.display = isMobile?'none':'flex';
-  document.getElementById('sp-layout').style.display = isMobile?'flex':'none';
+  isMobile=window.innerWidth<768;
+  document.getElementById('pc-layout').style.display=isMobile?'none':'flex';
+  document.getElementById('sp-layout').style.display=isMobile?'flex':'none';
 }
 window.addEventListener('resize',()=>{detectLayout();renderAll();});
 
@@ -548,23 +441,23 @@ function switchPage(name,el){
   document.querySelectorAll('#pc-layout .page').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
-  if(name==='stats') renderStats();
-  if(name==='inv-history') renderInvHistory();
+  if(name==='stats')renderStats();
+  if(name==='inv-history')renderInvHistory();
 }
 function spSwitchPage(name,el){
   document.querySelectorAll('.sp-nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('#sp-layout .page').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('sp-page-'+name).classList.add('active');
-  if(name==='stats') renderStats();
-  if(name==='inv-history') renderInvHistory();
+  if(name==='stats')renderStats();
+  if(name==='inv-history')renderInvHistory();
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // ユーティリティ
-// ══════════════════════════════════════════════════
-const fmt  = n => n?'¥'+Number(n).toLocaleString():'—';
-const fmtK = n => n?Number(n).toLocaleString()+' km':'—';
+// ══════════════════════════════════════════
+const fmt  = n=>n?'¥'+Number(n).toLocaleString():'—';
+const fmtK = n=>n?Number(n).toLocaleString()+' km':'—';
 function nextNo(){
   const nums=data.map(d=>parseInt(d.no.replace('J-',''))||0);
   return 'J-'+(Math.max(0,...nums)+1).toString().padStart(4,'0');
@@ -574,8 +467,7 @@ function calcProfit(d){
   return Number(d.sell)-(Number(d.price)+(Number(d.misc)||0));
 }
 function profitHTML(d){
-  const p=calcProfit(d);
-  if(p===null)return '—';
+  const p=calcProfit(d);if(p===null)return '—';
   return `<span class="${p>=0?'profit-pos':'profit-neg'}">${fmt(p)}</span>`;
 }
 function badgeHTML(s){
@@ -592,20 +484,17 @@ function getFiltered(){
   });
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // 描画
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function renderAll(){
   renderTopStats();
-  if(isMobile) renderSPCards();
-  else{ renderPCTable(); renderMakerFilter(); }
+  if(isMobile)renderSPCards();
+  else{renderPCTable();renderMakerFilter();}
 }
-
 function renderTopStats(){
-  const total=data.length;
-  const inStock=data.filter(d=>d.status==='在庫中').length;
-  const reserve=data.filter(d=>d.status==='売約済').length;
-  const sold=data.filter(d=>d.status==='販売済').length;
+  const total=data.length,inStock=data.filter(d=>d.status==='在庫中').length;
+  const reserve=data.filter(d=>d.status==='売約済').length,sold=data.filter(d=>d.status==='販売済').length;
   const profits=data.map(d=>calcProfit(d)).filter(p=>p!==null);
   const totalP=profits.reduce((s,p)=>s+p,0);
   const html=`
@@ -616,7 +505,6 @@ function renderTopStats(){
     <div class="stat-card ${totalP>=0?'green':'red'}"><div class="s-label">累計粗利</div><div class="s-value" style="font-size:18px">${fmt(totalP)}</div></div>`;
   ['pc-stats-row','sp-stats-row'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
-
 function renderPCTable(){
   const rows=getFiltered();
   document.getElementById('pc-empty').style.display=rows.length?'none':'block';
@@ -624,11 +512,9 @@ function renderPCTable(){
     <tr>
       <td><b>${d.no}</b></td><td>${d.date}</td><td>${d.maker}</td>
       <td>${d.model}${d.year?' <small style="color:var(--gray-400)">'+d.year+'年</small>':''}</td>
-      <td>${d.year||'—'}</td><td>${fmtK(d.km)}</td>
-      <td>${fmt(d.price)}</td><td>${fmt(d.sell)}</td>
+      <td>${d.year||'—'}</td><td>${fmtK(d.km)}</td><td>${fmt(d.price)}</td><td>${fmt(d.sell)}</td>
       <td>${profitHTML(d)}</td><td style="font-size:11px">${d.buyer||'—'}</td>
-      <td><b>${d.cond}</b></td>
-      <td style="color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
+      <td><b>${d.cond}</b></td><td style="color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
       <td>${badgeHTML(d.status)}</td>
       <td style="white-space:nowrap;display:flex;gap:4px">
         <button class="btn btn-outline btn-sm" onclick="openEdit('${d.id}')">✏️</button>
@@ -636,17 +522,13 @@ function renderPCTable(){
       </td>
     </tr>`).join('');
 }
-
 function renderSPCards(){
   const rows=getFiltered();
   document.getElementById('sp-empty').style.display=rows.length?'none':'block';
   document.getElementById('sp-cards').innerHTML=rows.map(d=>`
     <div class="car-card">
       <div class="car-card-header">
-        <div>
-          <div class="car-card-title">${d.maker} ${d.model}</div>
-          <div class="car-card-sub">${d.no}　${d.date}　${d.year||''}年式</div>
-        </div>
+        <div><div class="car-card-title">${d.maker} ${d.model}</div><div class="car-card-sub">${d.no}　${d.date}　${d.year||''}年式</div></div>
         ${badgeHTML(d.status)}
       </div>
       <div class="car-card-grid">
@@ -662,22 +544,16 @@ function renderSPCards(){
       </div>
     </div>`).join('');
 }
-
 function renderMakerFilter(){
   const makers=[...new Set(data.map(d=>d.maker).filter(Boolean))].sort();
   const sel=document.getElementById('pc-maker');if(!sel)return;
   const cur=sel.value;
   sel.innerHTML='<option value="">全メーカー</option>'+makers.map(m=>`<option${m===cur?' selected':''}>${m}</option>`).join('');
 }
-
 function renderStats(){
-  const inStock=data.filter(d=>d.status==='在庫中').length;
-  const reserve=data.filter(d=>d.status==='売約済').length;
-  const sold=data.filter(d=>d.status==='販売済').length;
-  const total=data.length;
+  const inStock=data.filter(d=>d.status==='在庫中').length,reserve=data.filter(d=>d.status==='売約済').length,sold=data.filter(d=>d.status==='販売済').length,total=data.length;
   const profits=data.filter(d=>d.sell&&d.price).map(d=>calcProfit(d));
-  const totalP=profits.reduce((s,p)=>s+p,0);
-  const avgP=profits.length?Math.round(totalP/profits.length):0;
+  const totalP=profits.reduce((s,p)=>s+p,0),avgP=profits.length?Math.round(totalP/profits.length):0;
   const stockV=data.filter(d=>d.status==='在庫中').reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   const totalC=data.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   const cards=`
@@ -690,7 +566,7 @@ function renderStats(){
   const barH=bd.map(x=>`<div style="flex:${x.n};background:${x.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700">${x.n}</div>`).join('');
   const legH=bd.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;background:${x.color};border-radius:2px;margin-right:4px"></span>${x.label} ${x.n}台</span>`).join('');
   ['pc','sp'].forEach(p=>{
-    const b=document.getElementById(p+'-status-bar');const l=document.getElementById(p+'-status-legend');
+    const b=document.getElementById(p+'-status-bar'),l=document.getElementById(p+'-status-legend');
     if(b)b.innerHTML=total?barH:'<div style="flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gray-400)">データなし</div>';
     if(l)l.innerHTML=legH;
   });
@@ -700,15 +576,13 @@ function renderStats(){
   const mH=top.map(([m,c])=>`<div class="bar-chart-row"><span class="label">${m}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(c/maxC*100)}%"><span>${c}</span></div></div></div>`).join('')||'<p style="font-size:12px;color:var(--gray-400)">データなし</p>';
   ['pc','sp'].forEach(p=>{const el=document.getElementById(p+'-maker-chart');if(el)el.innerHTML=mH;});
 }
-
 function renderInvHistory(){
   const html=invHist.length===0
     ?'<div class="empty-state"><span class="ico">📋</span><p>棚卸履歴がありません</p></div>'
     :invHist.slice().reverse().map(inv=>`
-      <div class="inv-record">
+      <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div><span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span>
-            <div style="font-size:11px;color:var(--gray-400);margin-top:2px">担当：${inv.staff||'—'}</div></div>
+          <div><span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span><div style="font-size:11px;color:var(--gray-400);margin-top:2px">担当：${inv.staff||'—'}</div></div>
           <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">在庫 ${inv.count}台</span>
         </div>
         <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
@@ -716,41 +590,18 @@ function renderInvHistory(){
           <div class="stat-card blue card-sm"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:16px">${fmt(inv.value)}</div></div>
         </div>
         ${inv.note?`<div style="font-size:12px;color:var(--gray-400);margin-top:8px">📝 ${inv.note}</div>`:''}
-        ${inv.snapshot&&inv.snapshot.length?`
-        <details style="margin-top:10px">
-          <summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">在庫車両リスト（${inv.snapshot.length}台）を見る</summary>
-          <div style="overflow-x:auto;margin-top:8px">
-            <table style="min-width:400px;font-size:12px;width:100%">
-              <thead><tr>
-                <th style="background:var(--navy);color:#fff;padding:6px 8px">仕入番号</th>
-                <th style="background:var(--navy);color:#fff;padding:6px 8px">メーカー</th>
-                <th style="background:var(--navy);color:#fff;padding:6px 8px">車種</th>
-                <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right">仕入価格</th>
-              </tr></thead>
-              <tbody>${inv.snapshot.map((s,i)=>`
-                <tr style="background:${i%2?'var(--gray-50)':'#fff'}">
-                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no}</td>
-                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker}</td>
-                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model}</td>
-                  <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(s.price)}</td>
-                </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </details>`:''}
+        ${inv.snapshot&&inv.snapshot.length?`<details style="margin-top:10px"><summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">在庫車両リスト（${inv.snapshot.length}台）を見る</summary><div style="overflow-x:auto;margin-top:8px"><table style="min-width:400px;font-size:12px;width:100%"><thead><tr><th style="background:var(--navy);color:#fff;padding:6px 8px">仕入番号</th><th style="background:var(--navy);color:#fff;padding:6px 8px">メーカー</th><th style="background:var(--navy);color:#fff;padding:6px 8px">車種</th><th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right">仕入価格</th></tr></thead><tbody>${inv.snapshot.map((s,i)=>`<tr style="background:${i%2?'var(--gray-50)':'#fff'}"><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(s.price)}</td></tr>`).join('')}</tbody></table></div></details>`:''}
       </div>`).join('');
   ['pc-inv-list','sp-inv-list'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // フォーム操作
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function openForm(){
   editId=null;
   document.getElementById('modal-title').textContent='新規仕入れ登録';
-  ['maker','model','year','vin','km','color','supplier','price','misc','buyer','sell','sell-date','note'].forEach(f=>{
-    const el=document.getElementById('f-'+f);if(el)el.value='';
-  });
+  ['maker','model','year','vin','km','color','supplier','price','misc','buyer','sell','sell-date','note'].forEach(f=>{const el=document.getElementById('f-'+f);if(el)el.value='';});
   document.getElementById('f-no').value=nextNo();
   document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('f-cond').value='A';
@@ -762,9 +613,7 @@ function openEdit(id){
   const d=data.find(x=>x.id===id);if(!d)return;
   editId=id;
   document.getElementById('modal-title').textContent='仕入れ情報を編集';
-  const map={no:d.no,date:d.date,maker:d.maker,model:d.model,year:d.year||'',vin:d.vin||'',
-    km:d.km||'',color:d.color||'',supplier:d.supplier||'',price:d.price||'',misc:d.misc||'',
-    buyer:d.buyer||'',sell:d.sell||'','sell-date':d.sellDate||'',note:d.note||''};
+  const map={no:d.no,date:d.date,maker:d.maker,model:d.model,year:d.year||'',vin:d.vin||'',km:d.km||'',color:d.color||'',supplier:d.supplier||'',price:d.price||'',misc:d.misc||'',buyer:d.buyer||'',sell:d.sell||'','sell-date':d.sellDate||'',note:d.note||''};
   Object.entries(map).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;});
   document.getElementById('f-cond').value=d.cond||'A';
   document.getElementById('f-repair').value=d.repair||'なし';
@@ -772,25 +621,21 @@ function openEdit(id){
   openModal('form-modal');
 }
 function saveRecord(){
-  const date=document.getElementById('f-date').value;
-  const maker=document.getElementById('f-maker').value.trim();
-  const model=document.getElementById('f-model').value.trim();
-  const price=document.getElementById('f-price').value;
+  const date=document.getElementById('f-date').value,maker=document.getElementById('f-maker').value.trim(),model=document.getElementById('f-model').value.trim(),price=document.getElementById('f-price').value;
   if(!date||!maker||!model||!price){showToast('⚠ 仕入日・メーカー・車種・仕入価格は必須です');return;}
   const rec={
     id:editId||(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
     no:document.getElementById('f-no').value,date,maker,model,
     year:document.getElementById('f-year').value,vin:document.getElementById('f-vin').value,
     km:document.getElementById('f-km').value,color:document.getElementById('f-color').value,
-    supplier:document.getElementById('f-supplier').value,price,
-    misc:document.getElementById('f-misc').value,buyer:document.getElementById('f-buyer').value,
-    sell:document.getElementById('f-sell').value,sellDate:document.getElementById('f-sell-date').value,
-    cond:document.getElementById('f-cond').value,repair:document.getElementById('f-repair').value,
-    status:document.getElementById('f-status-sel').value,note:document.getElementById('f-note').value,
+    supplier:document.getElementById('f-supplier').value,price,misc:document.getElementById('f-misc').value,
+    buyer:document.getElementById('f-buyer').value,sell:document.getElementById('f-sell').value,
+    sellDate:document.getElementById('f-sell-date').value,cond:document.getElementById('f-cond').value,
+    repair:document.getElementById('f-repair').value,status:document.getElementById('f-status-sel').value,
+    note:document.getElementById('f-note').value,
   };
   if(editId){const i=data.findIndex(x=>x.id===editId);data[i]=rec;}else data.push(rec);
-  closeModal('form-modal');
-  renderAll();
+  closeModal('form-modal');renderAll();
   showToast(editId?'✅ 更新しました':'✅ 登録しました');
   debounceSave();
 }
@@ -800,15 +645,14 @@ function deleteRec(id){
   renderAll();showToast('🗑 削除しました');debounceSave();
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // 棚卸
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function showInvModal(){
   const stocks=data.filter(d=>d.status==='在庫中');
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   document.getElementById('inv-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('inv-staff').value='';
-  document.getElementById('inv-note').value='';
+  document.getElementById('inv-staff').value='';document.getElementById('inv-note').value='';
   document.getElementById('inv-count-disp').textContent=stocks.length+' 台';
   document.getElementById('inv-val-disp').textContent=fmt(val);
   openModal('inv-modal');
@@ -818,54 +662,33 @@ function execInventory(){
   if(!date){showToast('⚠ 棚卸日を入力してください');return;}
   const stocks=data.filter(d=>d.status==='在庫中');
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  invHist.push({
-    id:Date.now().toString(36),date,
-    staff:document.getElementById('inv-staff').value,
-    note:document.getElementById('inv-note').value,
-    count:stocks.length,value:val,
-    snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))
-  });
+  invHist.push({id:Date.now().toString(36),date,staff:document.getElementById('inv-staff').value,note:document.getElementById('inv-note').value,count:stocks.length,value:val,snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))});
   closeModal('inv-modal');showToast('✅ 棚卸を保存しました');debounceSave();
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // CSV出力
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function exportCSV(){
   if(!data.length){showToast('⚠ データがありません');return;}
-  const rows=[['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号',
-    '仕入先','仕入価格(円)','諸費用(円)','仕入合計(円)','販売先','販売価格(円)','粗利(円)',
-    '販売日','車両状態','修復歴','ステータス','備考']];
+  const rows=[['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号','仕入先','仕入価格(円)','諸費用(円)','仕入合計(円)','販売先','販売価格(円)','粗利(円)','販売日','車両状態','修復歴','ステータス','備考']];
   data.forEach(d=>{
     const cost=(Number(d.price)||0)+(Number(d.misc)||0);
-    const profit=d.sell?Number(d.sell)-cost:'';
-    rows.push([d.no,d.date,d.maker,d.model,d.year||'',d.km||'',d.color||'',d.vin||'',
-      d.supplier||'',Number(d.price)||'',Number(d.misc)||'',cost,
-      d.buyer||'',d.sell?Number(d.sell):'',profit,d.sellDate||'',
-      d.cond,d.repair,d.status,d.note||'']);
+    rows.push([d.no,d.date,d.maker,d.model,d.year||'',d.km||'',d.color||'',d.vin||'',d.supplier||'',Number(d.price)||'',Number(d.misc)||'',cost,d.buyer||'',d.sell?Number(d.sell):'',d.sell?Number(d.sell)-cost:'',d.sellDate||'',d.cond,d.repair,d.status,d.note||'']);
   });
-  const csv=rows.map(r=>r.map(c=>{
-    const s=String(c??'');
-    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
-  }).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();URL.revokeObjectURL(a.href);
+  const csv=rows.map(r=>r.map(c=>{const s=String(c??'');return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(a.href);
   showToast('📥 CSVを出力しました');
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // モーダル・トースト
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)closeModal(bg.id);});});
 let toastTimer;
-function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
 </html>
