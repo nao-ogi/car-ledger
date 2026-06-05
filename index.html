@@ -6,6 +6,29 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>中古車仕入台帳</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, onValue, push, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyPlaceholderKeyForConfig",
+  databaseURL: "https://car-ledger-5f680-default-rtdb.firebaseio.com",
+  projectId: "car-ledger-5f680"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+window._db  = db;
+window._ref = ref;
+window._set = set;
+window._get = get;
+window._onValue  = onValue;
+window._push     = push;
+window._dbRemove = remove;
+window._firebaseReady = true;
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -21,7 +44,6 @@
   --font:'Hiragino Kaku Gothic ProN','Hiragino Sans','Meiryo','Yu Gothic',sans-serif;
 }
 html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:var(--gray-800);font-size:14px}
-/* ログイン */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:24px;background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%)}
 .login-card{background:var(--white);border-radius:var(--radius-lg);padding:40px 36px;box-shadow:var(--shadow-md);text-align:center;width:min(360px,90vw)}
 .login-card h1{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px}
@@ -30,12 +52,10 @@ html,body{height:100%;background:var(--gray-100);font-family:var(--font);color:v
 .google-btn:hover{background:var(--gray-50);border-color:var(--blue)}
 .google-btn img{width:20px;height:20px}
 .login-note{font-size:11px;color:rgba(255,255,255,.6);text-align:center}
-/* ローディング */
 #loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--gray-100)}
 .spinner{width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #loading-screen p{font-size:13px;color:var(--gray-400)}
-/* アプリ */
 #app{display:none;height:100vh;flex-direction:column}
 .pc-layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .pc-header{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-md)}
@@ -112,7 +132,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 .filter-bar input,.filter-bar select{padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:var(--white);color:var(--gray-800)}
 .filter-bar input{flex:1;min-width:160px}
 .bar-chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.bar-chart-row .label{width:80px;font-size:12px;color:var(--gray-600);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-chart-row .label{width:80px;font-size:12px;color:var(--gray-600);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar-chart-row .bar-wrap{flex:1;background:var(--gray-100);border-radius:4px;height:20px;overflow:hidden}
 .bar-chart-row .bar-fill{height:100%;background:var(--blue);border-radius:4px;display:flex;align-items:center;padding-left:6px;min-width:24px}
 .bar-chart-row .bar-fill span{font-size:11px;color:#fff;font-weight:600}
@@ -144,13 +164,14 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   <div class="login-card">
     <div style="font-size:40px;margin-bottom:12px">🚗</div>
     <h1>中古車仕入台帳</h1>
-    <p>Googleアカウントでログインしてください。<br>データは全員で共有されます。</p>
-    <button class="google-btn" onclick="signIn()">
+    <p>Googleアカウントでログインしてください。<br>データは全員でリアルタイム共有されます。</p>
+    <button class="google-btn" id="login-btn" onclick="signIn()" disabled>
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
       Googleでログイン
     </button>
+    <p id="login-status" style="font-size:11px;color:var(--gray-400);margin-top:12px">読み込み中…</p>
   </div>
-  <p class="login-note">データはFirebaseに保存・全員で共有されます</p>
+  <p class="login-note">データはFirebaseに保存・全員でリアルタイム共有されます</p>
 </div>
 
 <!-- ローディング -->
@@ -166,7 +187,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
     <header class="pc-header">
       <h1>🚗 中古車仕入台帳</h1>
       <div class="pc-header-right">
-        <span class="sync-badge sync-ok" id="pc-sync-badge">✅ 同期済み</span>
+        <span class="sync-badge sync-ok" id="pc-sync-badge">✅ リアルタイム同期中</span>
         <div class="user-info"><img id="pc-avatar" class="user-avatar" src="" alt="" style="display:none"><span id="pc-username"></span></div>
         <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
         <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
@@ -188,12 +209,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
             <select id="pc-status" onchange="renderAll()"><option value="">すべてのステータス</option><option>在庫中</option><option>売約済</option><option>販売済</option></select>
             <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
           </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th><th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th><th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th><th>ステータス</th><th>操作</th></tr></thead>
-              <tbody id="pc-tbody"></tbody>
-            </table>
-          </div>
+          <div class="tbl-wrap"><table><thead><tr><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th><th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th><th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th><th>ステータス</th><th>操作</th></tr></thead><tbody id="pc-tbody"></tbody></table></div>
           <div id="pc-empty" class="empty-state" style="display:none"><span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p></div>
         </div>
         <div class="page" id="page-stats">
@@ -311,19 +327,22 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 </div>
 
 <script>
-// ══════════════════════════════════════════
-// 設定（Firebase + Google OAuth）
-// ══════════════════════════════════════════
-const CLIENT_ID  = '975505986998-eaajge0mhlu41o7ddvmud5ndg2qvrqkr.apps.googleusercontent.com';
-const DB_URL     = 'https://car-ledger-5f680-default-rtdb.firebaseio.com';
-const SCOPES     = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+const CLIENT_ID = '975505986998-eaajge0mhlu41o7ddvmud5ndg2qvrqkr.apps.googleusercontent.com';
+let data=[], invHist=[], editId=null, isMobile=false;
 
-let data       = [];
-let invHist    = [];
-let editId     = null;
-let isMobile   = false;
-let accessToken= null;
-let syncTimer  = null;
+// Firebase準備完了待ち
+function waitFirebase(cb){
+  if(window._firebaseReady) cb();
+  else window.addEventListener('firebaseReady', cb, {once:true});
+}
+
+// ログインボタン有効化
+waitFirebase(()=>{
+  const btn=document.getElementById('login-btn');
+  const st=document.getElementById('login-status');
+  if(btn){btn.disabled=false; btn.style.opacity='1';}
+  if(st) st.textContent='準備完了';
+});
 
 // ══════════════════════════════════════════
 // 認証
@@ -331,87 +350,99 @@ let syncTimer  = null;
 function signIn(){
   const client = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
-    scope: SCOPES,
+    scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
     callback: async (resp) => {
       if(resp.error){ showToast('❌ ログインに失敗しました'); return; }
-      accessToken = resp.access_token;
       showLoading('データを読み込み中…');
-      await loadUserInfo();
-      await loadFromDB();
-      showApp();
+      try{
+        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+resp.access_token}});
+        const u = await r.json();
+        const av=document.getElementById('pc-avatar'), nm=document.getElementById('pc-username');
+        if(av&&u.picture){av.src=u.picture;av.style.display='block';}
+        if(nm) nm.textContent=u.name||u.email||'';
+      }catch(e){}
+      waitFirebase(()=>{ startRealtimeSync(); showApp(); });
     }
   });
   client.requestAccessToken();
 }
 
-async function loadUserInfo(){
-  try{
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
-    const u = await r.json();
-    const av = document.getElementById('pc-avatar');
-    const nm = document.getElementById('pc-username');
-    if(av && u.picture){ av.src=u.picture; av.style.display='block'; }
-    if(nm) nm.textContent = u.name || u.email || '';
-  }catch(e){}
-}
-
 function signOut(){
-  if(!confirm('ログアウトしますか？')) return;
-  accessToken=null; data=[]; invHist=[];
+  if(!confirm('ログアウトしますか？'))return;
+  // リスナー解除
+  if(window._unsubscribeData)    window._unsubscribeData();
+  if(window._unsubscribeInvHist) window._unsubscribeInvHist();
+  data=[]; invHist=[];
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
 }
 
 // ══════════════════════════════════════════
-// Firebase Realtime Database 読み書き
+// Firebase リアルタイム同期（onValue）
 // ══════════════════════════════════════════
-async function loadFromDB(){
-  try{
-    setSyncBadge('ing','🔄 読み込み中');
-    const r = await fetch(DB_URL+'/ledger.json');
-    const json = await r.json();
-    if(json){
-      data    = json.data    ? Object.values(json.data)    : [];
-      invHist = json.invHist ? Object.values(json.invHist) : [];
-    }
-    setSyncBadge('ok','✅ 同期済み');
-  }catch(e){
-    setSyncBadge('err','❌ 読込エラー');
-    showToast('❌ データの読み込みに失敗しました');
-  }
+function startRealtimeSync(){
+  const db = window._db;
+
+  // 車両データ：変更があれば自動で画面を更新
+  const dataRef = window._ref(db, 'ledger/data');
+  window._unsubscribeData = window._onValue(dataRef, (snapshot) => {
+    const val = snapshot.val();
+    data = val ? Object.values(val) : [];
+    renderAll();
+    setSyncBadge('ok','✅ リアルタイム同期中');
+  }, (err) => {
+    setSyncBadge('err','❌ 同期エラー');
+    showToast('❌ データ同期に失敗しました: '+err.message);
+  });
+
+  // 棚卸履歴：変更があれば自動更新
+  const invRef = window._ref(db, 'ledger/invHist');
+  window._unsubscribeInvHist = window._onValue(invRef, (snapshot) => {
+    const val = snapshot.val();
+    invHist = val ? Object.values(val) : [];
+  });
 }
 
-async function saveToDB(){
+// レコード保存（個別キーで保存→上書き問題なし）
+async function saveRecordToDB(rec){
   try{
     setSyncBadge('ing','🔄 保存中');
-    // 配列をオブジェクトに変換（Firebase推奨形式）
-    const dataObj    = {};
-    data.forEach(d=>{ dataObj[d.id]=d; });
-    const invHistObj = {};
-    invHist.forEach(i=>{ invHistObj[i.id]=i; });
-    await fetch(DB_URL+'/ledger.json',{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({data:dataObj, invHist:invHistObj})
-    });
-    setSyncBadge('ok','✅ 同期済み');
+    const db=window._db, r=window._ref, s=window._set;
+    await s(r(db, 'ledger/data/'+rec.id), rec);
+    // setSyncBadgeはonValueのコールバックで更新される
   }catch(e){
-    setSyncBadge('err','❌ 保存エラー');
-    showToast('❌ 保存に失敗しました。接続を確認してください。');
+    setSyncBadge('err','❌ 保存失敗');
+    showToast('❌ 保存に失敗しました: '+e.message);
+    throw e;
   }
 }
 
-function debounceSave(){
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=>saveToDB(), 1000);
+// レコード削除
+async function deleteRecordFromDB(id){
+  try{
+    const db=window._db, r=window._ref, d=window._dbRemove;
+    await d(r(db, 'ledger/data/'+id));
+  }catch(e){
+    showToast('❌ 削除に失敗しました: '+e.message);
+    throw e;
+  }
+}
+
+// 棚卸保存
+async function saveInvToDB(inv){
+  try{
+    const db=window._db, r=window._ref, s=window._set;
+    await s(r(db, 'ledger/invHist/'+inv.id), inv);
+  }catch(e){
+    showToast('❌ 棚卸の保存に失敗しました: '+e.message);
+    throw e;
+  }
 }
 
 function setSyncBadge(type,text){
   ['pc-sync-badge','sp-sync-badge'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    el.className='sync-badge sync-'+type;
-    el.textContent=text;
+    const el=document.getElementById(id);if(!el)return;
+    el.className='sync-badge sync-'+type;el.textContent=text;
   });
 }
 
@@ -425,8 +456,7 @@ function showLoading(msg){
 }
 function showApp(){
   document.getElementById('loading-screen').style.display='none';
-  const app=document.getElementById('app');
-  app.style.display='flex';
+  const app=document.getElementById('app');app.style.display='flex';
   detectLayout(); renderAll();
 }
 function detectLayout(){
@@ -435,45 +465,28 @@ function detectLayout(){
   document.getElementById('sp-layout').style.display=isMobile?'flex':'none';
 }
 window.addEventListener('resize',()=>{detectLayout();renderAll();});
-
 function switchPage(name,el){
   document.querySelectorAll('.pc-nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('#pc-layout .page').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('page-'+name).classList.add('active');
-  if(name==='stats')renderStats();
-  if(name==='inv-history')renderInvHistory();
+  el.classList.add('active');document.getElementById('page-'+name).classList.add('active');
+  if(name==='stats')renderStats();if(name==='inv-history')renderInvHistory();
 }
 function spSwitchPage(name,el){
   document.querySelectorAll('.sp-nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('#sp-layout .page').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('sp-page-'+name).classList.add('active');
-  if(name==='stats')renderStats();
-  if(name==='inv-history')renderInvHistory();
+  el.classList.add('active');document.getElementById('sp-page-'+name).classList.add('active');
+  if(name==='stats')renderStats();if(name==='inv-history')renderInvHistory();
 }
 
 // ══════════════════════════════════════════
 // ユーティリティ
 // ══════════════════════════════════════════
-const fmt  = n=>n?'¥'+Number(n).toLocaleString():'—';
-const fmtK = n=>n?Number(n).toLocaleString()+' km':'—';
-function nextNo(){
-  const nums=data.map(d=>parseInt(d.no.replace('J-',''))||0);
-  return 'J-'+(Math.max(0,...nums)+1).toString().padStart(4,'0');
-}
-function calcProfit(d){
-  if(!d.sell||!d.price)return null;
-  return Number(d.sell)-(Number(d.price)+(Number(d.misc)||0));
-}
-function profitHTML(d){
-  const p=calcProfit(d);if(p===null)return '—';
-  return `<span class="${p>=0?'profit-pos':'profit-neg'}">${fmt(p)}</span>`;
-}
-function badgeHTML(s){
-  const cls=s==='在庫中'?'badge-stock':s==='売約済'?'badge-reserve':'badge-sold';
-  return `<span class="badge ${cls}">${s}</span>`;
-}
+const fmt=n=>n?'¥'+Number(n).toLocaleString():'—';
+const fmtK=n=>n?Number(n).toLocaleString()+' km':'—';
+function nextNo(){const nums=data.map(d=>parseInt(d.no.replace('J-',''))||0);return 'J-'+(Math.max(0,...nums)+1).toString().padStart(4,'0');}
+function calcProfit(d){if(!d.sell||!d.price)return null;return Number(d.sell)-(Number(d.price)+(Number(d.misc)||0));}
+function profitHTML(d){const p=calcProfit(d);if(p===null)return '—';return `<span class="${p>=0?'profit-pos':'profit-neg'}">${fmt(p)}</span>`;}
+function badgeHTML(s){const cls=s==='在庫中'?'badge-stock':s==='売約済'?'badge-reserve':'badge-sold';return `<span class="badge ${cls}">${s}</span>`;}
 function getFiltered(){
   const q=(document.getElementById(isMobile?'sp-search':'pc-search').value||'').toLowerCase();
   const st=document.getElementById(isMobile?'sp-status':'pc-status').value;
@@ -489,8 +502,7 @@ function getFiltered(){
 // ══════════════════════════════════════════
 function renderAll(){
   renderTopStats();
-  if(isMobile)renderSPCards();
-  else{renderPCTable();renderMakerFilter();}
+  if(isMobile)renderSPCards();else{renderPCTable();renderMakerFilter();}
 }
 function renderTopStats(){
   const total=data.length,inStock=data.filter(d=>d.status==='在庫中').length;
@@ -571,8 +583,7 @@ function renderStats(){
     if(l)l.innerHTML=legH;
   });
   const mc={};data.forEach(d=>{if(d.maker)mc[d.maker]=(mc[d.maker]||0)+1;});
-  const top=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxC=top[0]?top[0][1]:1;
+  const top=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,8);const maxC=top[0]?top[0][1]:1;
   const mH=top.map(([m,c])=>`<div class="bar-chart-row"><span class="label">${m}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(c/maxC*100)}%"><span>${c}</span></div></div></div>`).join('')||'<p style="font-size:12px;color:var(--gray-400)">データなし</p>';
   ['pc','sp'].forEach(p=>{const el=document.getElementById(p+'-maker-chart');if(el)el.innerHTML=mH;});
 }
@@ -590,7 +601,6 @@ function renderInvHistory(){
           <div class="stat-card blue card-sm"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:16px">${fmt(inv.value)}</div></div>
         </div>
         ${inv.note?`<div style="font-size:12px;color:var(--gray-400);margin-top:8px">📝 ${inv.note}</div>`:''}
-        ${inv.snapshot&&inv.snapshot.length?`<details style="margin-top:10px"><summary style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">在庫車両リスト（${inv.snapshot.length}台）を見る</summary><div style="overflow-x:auto;margin-top:8px"><table style="min-width:400px;font-size:12px;width:100%"><thead><tr><th style="background:var(--navy);color:#fff;padding:6px 8px">仕入番号</th><th style="background:var(--navy);color:#fff;padding:6px 8px">メーカー</th><th style="background:var(--navy);color:#fff;padding:6px 8px">車種</th><th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right">仕入価格</th></tr></thead><tbody>${inv.snapshot.map((s,i)=>`<tr style="background:${i%2?'var(--gray-50)':'#fff'}"><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model}</td><td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(s.price)}</td></tr>`).join('')}</tbody></table></div></details>`:''}
       </div>`).join('');
   ['pc-inv-list','sp-inv-list'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
@@ -620,7 +630,7 @@ function openEdit(id){
   document.getElementById('f-status-sel').value=d.status||'在庫中';
   openModal('form-modal');
 }
-function saveRecord(){
+async function saveRecord(){
   const date=document.getElementById('f-date').value,maker=document.getElementById('f-maker').value.trim(),model=document.getElementById('f-model').value.trim(),price=document.getElementById('f-price').value;
   if(!date||!maker||!model||!price){showToast('⚠ 仕入日・メーカー・車種・仕入価格は必須です');return;}
   const rec={
@@ -634,15 +644,19 @@ function saveRecord(){
     repair:document.getElementById('f-repair').value,status:document.getElementById('f-status-sel').value,
     note:document.getElementById('f-note').value,
   };
-  if(editId){const i=data.findIndex(x=>x.id===editId);data[i]=rec;}else data.push(rec);
-  closeModal('form-modal');renderAll();
-  showToast(editId?'✅ 更新しました':'✅ 登録しました');
-  debounceSave();
+  closeModal('form-modal');
+  try{
+    await saveRecordToDB(rec);
+    showToast(editId?'✅ 更新しました（全員に共有されます）':'✅ 登録しました（全員に共有されます）');
+  }catch(e){}
+  editId=null;
 }
-function deleteRec(id){
+async function deleteRec(id){
   if(!confirm('この記録を削除しますか？'))return;
-  data=data.filter(x=>x.id!==id);
-  renderAll();showToast('🗑 削除しました');debounceSave();
+  try{
+    await deleteRecordFromDB(id);
+    showToast('🗑 削除しました');
+  }catch(e){}
 }
 
 // ══════════════════════════════════════════
@@ -657,13 +671,14 @@ function showInvModal(){
   document.getElementById('inv-val-disp').textContent=fmt(val);
   openModal('inv-modal');
 }
-function execInventory(){
+async function execInventory(){
   const date=document.getElementById('inv-date').value;
   if(!date){showToast('⚠ 棚卸日を入力してください');return;}
   const stocks=data.filter(d=>d.status==='在庫中');
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  invHist.push({id:Date.now().toString(36),date,staff:document.getElementById('inv-staff').value,note:document.getElementById('inv-note').value,count:stocks.length,value:val,snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))});
-  closeModal('inv-modal');showToast('✅ 棚卸を保存しました');debounceSave();
+  const inv={id:Date.now().toString(36),date,staff:document.getElementById('inv-staff').value,note:document.getElementById('inv-note').value,count:stocks.length,value:val,snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))};
+  closeModal('inv-modal');
+  try{ await saveInvToDB(inv); showToast('✅ 棚卸を保存しました'); }catch(e){}
 }
 
 // ══════════════════════════════════════════
@@ -672,10 +687,7 @@ function execInventory(){
 function exportCSV(){
   if(!data.length){showToast('⚠ データがありません');return;}
   const rows=[['仕入番号','仕入日','メーカー','車種','年式','走行距離(km)','色','車体番号','仕入先','仕入価格(円)','諸費用(円)','仕入合計(円)','販売先','販売価格(円)','粗利(円)','販売日','車両状態','修復歴','ステータス','備考']];
-  data.forEach(d=>{
-    const cost=(Number(d.price)||0)+(Number(d.misc)||0);
-    rows.push([d.no,d.date,d.maker,d.model,d.year||'',d.km||'',d.color||'',d.vin||'',d.supplier||'',Number(d.price)||'',Number(d.misc)||'',cost,d.buyer||'',d.sell?Number(d.sell):'',d.sell?Number(d.sell)-cost:'',d.sellDate||'',d.cond,d.repair,d.status,d.note||'']);
-  });
+  data.forEach(d=>{const cost=(Number(d.price)||0)+(Number(d.misc)||0);rows.push([d.no,d.date,d.maker,d.model,d.year||'',d.km||'',d.color||'',d.vin||'',d.supplier||'',Number(d.price)||'',Number(d.misc)||'',cost,d.buyer||'',d.sell?Number(d.sell):'',d.sell?Number(d.sell)-cost:'',d.sellDate||'',d.cond,d.repair,d.status,d.note||'']);});
   const csv=rows.map(r=>r.map(c=>{const s=String(c??'');return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='仕入台帳_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(a.href);
   showToast('📥 CSVを出力しました');
@@ -688,7 +700,7 @@ function openModal(id){document.getElementById(id).classList.add('open');documen
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)closeModal(bg.id);});});
 let toastTimer;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
 </script>
 </body>
 </html>
