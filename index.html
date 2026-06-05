@@ -362,6 +362,8 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
               <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap;position:sticky;top:0">仕入合計</th>
               <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">状態</th>
               <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">修復歴</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">ステータス</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">販売日</th>
             </tr>
           </thead>
           <tbody id="inv-vehicle-list"></tbody>
@@ -389,8 +391,9 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   <table class="print-table" id="print-table">
     <thead><tr>
       <th>No.</th><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
-      <th>年式</th><th>走行距離</th><th>色</th><th>車体番号</th>
-      <th>仕入価格(円)</th><th>仕入合計(円)</th><th>状態</th><th>修復歴</th><th>備考</th>
+      <th>年式</th><th>走行距離</th><th>色</th>
+      <th>仕入価格(円)</th><th>仕入合計(円)</th><th>状態</th><th>修復歴</th>
+      <th>ステータス</th><th>販売日</th><th>販売先</th><th>備考</th>
     </tr></thead>
     <tbody id="print-tbody"></tbody>
   </table>
@@ -733,26 +736,49 @@ async function deleteRec(id){
 // ══════════════════════════════════════════
 // 棚卸
 // ══════════════════════════════════════════
+
+/**
+ * 棚卸日時点の在庫判定ロジック
+ * 以下のいずれかを満たす車両を「在庫」とみなす：
+ *   ① ステータスが「在庫中」
+ *   ② ステータスが「売約済」（売約済＝納車前なので在庫扱い）
+ *   ③ ステータスが「販売済」かつ 販売日 > 棚卸日（棚卸日時点では未納車）
+ *   ④ ステータスが「販売済」かつ 販売日が未入力（納車日不明＝在庫扱い）
+ */
+function getStocksAtDate(invDate){
+  return data.filter(d=>{
+    if(d.status==='在庫中') return true;
+    if(d.status==='売約済')  return true;
+    if(d.status==='販売済'){
+      if(!d.sellDate) return true;          // 販売日未入力→在庫扱い
+      return d.sellDate > invDate;          // 販売日が棚卸日より後→棚卸日時点は未納車
+    }
+    return false;
+  });
+}
+
 function updateInvDateDisp(){
   const v=document.getElementById('inv-date').value;
   document.getElementById('inv-date-disp').textContent=v||'—';
+  if(v) refreshInvModal(v);  // 日付変更時に在庫一覧を再描画
 }
-function showInvModal(){
-  const stocks=data.filter(d=>d.status==='在庫中');
+
+function refreshInvModal(invDate){
+  const stocks=getStocksAtDate(invDate);
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  const today=new Date().toISOString().slice(0,10);
-  document.getElementById('inv-date').value=today;
-  document.getElementById('inv-staff').value='';
-  document.getElementById('inv-note').value='';
   document.getElementById('inv-count-disp').textContent=stocks.length+' 台';
   document.getElementById('inv-val-disp').textContent=fmt(val);
-  document.getElementById('inv-date-disp').textContent=today;
   // 車両一覧テーブル描画
   const tbody=document.getElementById('inv-vehicle-list');
-  if(tbody){
-    tbody.innerHTML=stocks.length===0
-      ?'<tr><td colspan="11" style="text-align:center;padding:16px;color:var(--gray-400)">在庫車両がありません</td></tr>'
-      :stocks.map((d,i)=>`
+  if(!tbody) return;
+  tbody.innerHTML=stocks.length===0
+    ?'<tr><td colspan="13" style="text-align:center;padding:16px;color:var(--gray-400)">在庫車両がありません</td></tr>'
+    :stocks.map((d,i)=>{
+      // 棚卸日時点のステータス表示
+      let dispStatus=d.status;
+      if(d.status==='販売済'&&(!d.sellDate||d.sellDate>invDate)) dispStatus='未納車（在庫）';
+      const statusColor=dispStatus==='在庫中'?'var(--blue)':dispStatus==='売約済'?'var(--amber)':'var(--green)';
+      return `
         <tr style="background:${i%2?'var(--gray-50)':'#fff'}">
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.no}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.date}</td>
@@ -765,21 +791,38 @@ function showInvModal(){
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right;font-weight:600;color:var(--blue)">${fmt((Number(d.price)||0)+(Number(d.misc)||0))}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center"><b>${d.cond}</b></td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
-        </tr>`).join('');
-  }
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:10px;color:${statusColor};font-weight:600">${dispStatus}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:10px;color:var(--gray-400)">${d.sellDate||'—'}</td>
+        </tr>`;
+    }).join('');
+}
+
+function showInvModal(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('inv-date').value=today;
+  document.getElementById('inv-staff').value='';
+  document.getElementById('inv-note').value='';
+  document.getElementById('inv-date-disp').textContent=today;
+  refreshInvModal(today);
   openModal('inv-modal');
 }
+
 async function execInventory(){
   const date=document.getElementById('inv-date').value;
   if(!date){showToast('⚠ 棚卸日を入力してください');return;}
-  const stocks=data.filter(d=>d.status==='在庫中');
+  const stocks=getStocksAtDate(date);
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   const inv={
     id:Date.now().toString(36),date,
     staff:document.getElementById('inv-staff').value,
     note:document.getElementById('inv-note').value,
     count:stocks.length,value:val,
-    snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year||'',price:d.price,misc:d.misc||'',km:d.km||'',color:d.color||'',vin:d.vin||'',cond:d.cond,repair:d.repair,date:d.date}))
+    snapshot:stocks.map(d=>({
+      no:d.no,maker:d.maker,model:d.model,year:d.year||'',
+      price:d.price,misc:d.misc||'',km:d.km||'',color:d.color||'',
+      vin:d.vin||'',cond:d.cond,repair:d.repair,date:d.date,
+      status:d.status,sellDate:d.sellDate||'',buyer:d.buyer||''
+    }))
   };
   closeModal('inv-modal');
   try{ await saveInvToDB(inv); showToast('✅ 棚卸を保存しました'); }catch(e){}
@@ -791,7 +834,8 @@ async function execInventory(){
 function printInventory(){
   const date=document.getElementById('inv-date').value||'—';
   const staff=document.getElementById('inv-staff').value||'—';
-  const stocks=data.filter(d=>d.status==='在庫中');
+  const invDate=document.getElementById('inv-date').value;
+  const stocks=invDate?getStocksAtDate(invDate):data.filter(d=>d.status==='在庫中');
   const totalVal=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
   // 印刷ヘッダー
   document.getElementById('print-date-label').textContent='棚卸日：'+date;
@@ -802,23 +846,30 @@ function printInventory(){
     <div class="ps-item"><div class="ps-label">在庫評価額合計</div><div class="ps-val">¥${totalVal.toLocaleString()}</div></div>
     <div class="ps-item"><div class="ps-label">出力日時</div><div class="ps-val" style="font-size:10pt">${new Date().toLocaleString('ja-JP')}</div></div>
     <div class="ps-item"><div class="ps-label">備考</div><div class="ps-val" style="font-size:9pt;font-weight:normal">${document.getElementById('inv-note').value||'—'}</div></div>`;
-  // 明細テーブル
+  // 明細テーブル（販売日・販売先列を追加）
   document.getElementById('print-tbody').innerHTML=stocks.length===0
-    ?'<tr><td colspan="14" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
-    :stocks.map((d,i)=>`<tr>
-      <td style="text-align:center">${i+1}</td>
-      <td>${d.no}</td><td>${d.date}</td><td>${d.maker}</td><td>${d.model}</td>
-      <td style="text-align:center">${d.year||'—'}</td>
-      <td style="text-align:right">${fmtK(d.km)}</td>
-      <td>${d.color||'—'}</td><td style="font-size:8pt">${d.vin||'—'}</td>
-      <td style="text-align:right">${fmt(d.price)}</td>
-      <td style="text-align:right;font-weight:bold">${fmt((Number(d.price)||0)+(Number(d.misc)||0))}</td>
-      <td style="text-align:center">${d.cond}</td>
-      <td style="text-align:center;color:${d.repair==='あり'?'#b83232':'inherit'}">${d.repair}</td>
-      <td style="font-size:8pt">${d.note||''}</td>
-    </tr>`).join('');
-  document.getElementById('print-footer').textContent='棚卸日：'+date+'　担当：'+staff+'　※このドキュメントは中古車仕入台帳システムより出力されました';
-  // 印刷実行（ブラウザのPDF保存機能を利用）
+    ?'<tr><td colspan="16" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
+    :stocks.map((d,i)=>{
+      let dispStatus=d.status;
+      if(d.status==='販売済'&&(!d.sellDate||d.sellDate>invDate)) dispStatus='未納車';
+      return `<tr>
+        <td style="text-align:center">${i+1}</td>
+        <td>${d.no}</td><td>${d.date}</td><td>${d.maker}</td><td>${d.model}</td>
+        <td style="text-align:center">${d.year||'—'}</td>
+        <td style="text-align:right">${fmtK(d.km)}</td>
+        <td>${d.color||'—'}</td>
+        <td style="text-align:right">${fmt(d.price)}</td>
+        <td style="text-align:right;font-weight:bold">${fmt((Number(d.price)||0)+(Number(d.misc)||0))}</td>
+        <td style="text-align:center">${d.cond}</td>
+        <td style="text-align:center;color:${d.repair==='あり'?'#b83232':'inherit'}">${d.repair}</td>
+        <td style="font-size:8pt">${dispStatus}</td>
+        <td style="font-size:8pt">${d.sellDate||'—'}</td>
+        <td style="font-size:8pt">${d.buyer||'—'}</td>
+        <td style="font-size:8pt">${d.note||''}</td>
+      </tr>`;
+    }).join('');
+  document.getElementById('print-footer').textContent=
+    '棚卸日：'+date+'　担当：'+staff+'　在庫判定基準：棚卸日時点で未納車の車両を含む　※中古車仕入台帳システムより出力';
   window.print();
 }
 
