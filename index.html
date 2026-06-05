@@ -509,11 +509,17 @@ function startRealtimeSync(){
     showToast('❌ データ同期に失敗しました: '+err.message);
   });
 
-  // 棚卸履歴：変更があれば自動更新
+  // 棚卸履歴：変更があれば自動更新（追加・削除含む）
   const invRef = window._ref(db, 'ledger/invHist');
   window._unsubscribeInvHist = window._onValue(invRef, (snapshot) => {
     const val = snapshot.val();
     invHist = val ? Object.values(val) : [];
+    // 棚卸履歴タブが表示中なら即時再描画
+    const pcPage = document.getElementById('page-inv-history');
+    const spPage = document.getElementById('sp-page-inv-history');
+    const pcVisible = pcPage && pcPage.classList.contains('active');
+    const spVisible = spPage && spPage.classList.contains('active');
+    if(pcVisible || spVisible) renderInvHistory();
   });
 }
 
