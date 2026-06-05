@@ -154,6 +154,28 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 }
 @media(max-width:400px){.form-grid{grid-template-columns:1fr}.form-grid-2{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:3px}
+
+/* ── 印刷用スタイル ── */
+@media print{
+  body{background:#fff;font-size:11pt;font-family:'MS Gothic','Hiragino Kaku Gothic ProN',sans-serif}
+  #print-area{display:block!important}
+  #login-screen,#loading-screen,#app,.modal-bg{display:none!important}
+  .print-header{text-align:center;margin-bottom:16pt}
+  .print-header h1{font-size:16pt;font-weight:bold;border-bottom:2pt solid #1a3a5c;padding-bottom:6pt;margin-bottom:6pt}
+  .print-header .meta{font-size:9pt;color:#555;display:flex;justify-content:space-between}
+  .print-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin-bottom:14pt;border:1pt solid #ccc;border-radius:4pt;overflow:hidden}
+  .print-summary .ps-item{padding:8pt;border-right:1pt solid #e2e6eb;text-align:center}
+  .print-summary .ps-item:last-child{border-right:none}
+  .print-summary .ps-label{font-size:8pt;color:#666;margin-bottom:3pt}
+  .print-summary .ps-val{font-size:13pt;font-weight:bold;color:#1a3a5c}
+  .print-table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .print-table th{background:#1a3a5c;color:#fff;padding:5pt 6pt;text-align:left;font-weight:bold;white-space:nowrap}
+  .print-table td{padding:4pt 6pt;border-bottom:0.5pt solid #ddd;vertical-align:middle}
+  .print-table tr:nth-child(even) td{background:#f4f8fc}
+  .print-footer{margin-top:12pt;font-size:8pt;color:#888;text-align:center;border-top:0.5pt solid #ccc;padding-top:6pt}
+  @page{size:A4 landscape;margin:15mm 12mm}
+}
+#print-area{display:none}
 </style>
 </head>
 <body>
@@ -190,7 +212,8 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
         <span class="sync-badge sync-ok" id="pc-sync-badge">✅ リアルタイム同期中</span>
         <div class="user-info"><img id="pc-avatar" class="user-avatar" src="" alt="" style="display:none"><span id="pc-username"></span></div>
         <button class="btn btn-outline btn-sm" onclick="showInvModal()">📋 棚卸</button>
-        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV出力</button>
+        <button class="btn btn-outline btn-sm" onclick="triggerCSVImport()">📤 CSV復元</button>
         <button class="btn btn-primary btn-sm" onclick="openForm()">＋ 新規登録</button>
         <button class="btn btn-outline btn-sm" onclick="signOut()">ログアウト</button>
       </div>
@@ -229,6 +252,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
         <span class="sync-badge sync-ok" id="sp-sync-badge" style="font-size:10px">✅</span>
         <button class="btn-icon" onclick="showInvModal()">📋</button>
         <button class="btn-icon" onclick="exportCSV()">📥</button>
+        <button class="btn-icon" onclick="triggerCSVImport()">📤</button>
         <button class="btn-icon" onclick="signOut()">🚪</button>
       </div>
     </header>
@@ -306,24 +330,71 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 
 <!-- 棚卸モーダル -->
 <div class="modal-bg" id="inv-modal">
-  <div class="modal">
+  <div class="modal" style="width:min(780px,100%)">
     <div class="modal-header"><h2>棚卸の実施</h2><button class="btn-icon" onclick="closeModal('inv-modal')">✕</button></div>
     <div class="modal-body">
-      <div class="form-grid-2">
-        <div class="field"><label>棚卸日 ＊</label><input id="inv-date" type="date"></div>
+      <!-- ① サマリー（上部） -->
+      <div style="background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--radius-md);padding:16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
+        <div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px">在庫台数</div><div style="font-size:28px;font-weight:800;color:#fff" id="inv-count-disp">—</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px">在庫評価額</div><div style="font-size:22px;font-weight:800;color:#fff" id="inv-val-disp">—</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:4px">棚卸日</div><div style="font-size:16px;font-weight:700;color:#fff" id="inv-date-disp">—</div></div>
+      </div>
+      <!-- ② 入力フォーム -->
+      <div class="form-grid-2" style="margin-bottom:12px">
+        <div class="field"><label>棚卸日 ＊</label><input id="inv-date" type="date" oninput="updateInvDateDisp()"></div>
         <div class="field"><label>担当者</label><input id="inv-staff" placeholder="山田 花子"></div>
       </div>
-      <div class="field" style="margin-top:12px"><label>備考</label><textarea id="inv-note" placeholder="特記事項" style="min-height:48px"></textarea></div>
-      <div style="background:var(--blue-xl);border-radius:var(--radius-md);padding:14px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫台数</div><div style="font-size:22px;font-weight:800;color:var(--blue)" id="inv-count-disp">—</div></div>
-        <div><div style="font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px">在庫評価額</div><div style="font-size:18px;font-weight:800;color:var(--blue)" id="inv-val-disp">—</div></div>
+      <div class="field" style="margin-bottom:14px"><label>備考</label><textarea id="inv-note" placeholder="特記事項" style="min-height:44px"></textarea></div>
+      <!-- ③ 在庫車両一覧 -->
+      <div style="font-size:11px;font-weight:700;color:var(--blue);padding-bottom:5px;border-bottom:2px solid var(--blue-xl);margin-bottom:10px">在庫車両詳細一覧</div>
+      <div style="overflow-x:auto;max-height:240px;overflow-y:auto;border-radius:var(--radius-sm);border:1px solid var(--gray-200)">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:580px">
+          <thead>
+            <tr>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">仕入番号</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">仕入日</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">メーカー</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">車種</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">年式</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">走行距離</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">色</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap;position:sticky;top:0">仕入価格</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap;position:sticky;top:0">仕入合計</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">状態</th>
+              <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0">修復歴</th>
+            </tr>
+          </thead>
+          <tbody id="inv-vehicle-list"></tbody>
+        </table>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('inv-modal')">キャンセル</button>
+      <button class="btn btn-outline" onclick="printInventory()">🖨️ 印刷・PDF</button>
       <button class="btn btn-primary" onclick="execInventory()">✅ 棚卸を実施・保存</button>
     </div>
   </div>
+</div>
+
+<!-- CSV取り込み用隠しinput -->
+<input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="handleCSVImport(event)">
+
+<!-- 印刷専用エリア（画面上は非表示） -->
+<div id="print-area">
+  <div class="print-header">
+    <h1>中古自動車　棚卸台帳</h1>
+    <div class="meta"><span id="print-date-label"></span><span id="print-staff-label"></span><span id="print-company">株式会社　〇〇オート</span></div>
+  </div>
+  <div class="print-summary" id="print-summary"></div>
+  <table class="print-table" id="print-table">
+    <thead><tr>
+      <th>No.</th><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
+      <th>年式</th><th>走行距離</th><th>色</th><th>車体番号</th>
+      <th>仕入価格(円)</th><th>仕入合計(円)</th><th>状態</th><th>修復歴</th><th>備考</th>
+    </tr></thead>
+    <tbody id="print-tbody"></tbody>
+  </table>
+  <div class="print-footer" id="print-footer"></div>
 </div>
 
 <script>
@@ -662,13 +733,40 @@ async function deleteRec(id){
 // ══════════════════════════════════════════
 // 棚卸
 // ══════════════════════════════════════════
+function updateInvDateDisp(){
+  const v=document.getElementById('inv-date').value;
+  document.getElementById('inv-date-disp').textContent=v||'—';
+}
 function showInvModal(){
   const stocks=data.filter(d=>d.status==='在庫中');
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  document.getElementById('inv-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('inv-staff').value='';document.getElementById('inv-note').value='';
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('inv-date').value=today;
+  document.getElementById('inv-staff').value='';
+  document.getElementById('inv-note').value='';
   document.getElementById('inv-count-disp').textContent=stocks.length+' 台';
   document.getElementById('inv-val-disp').textContent=fmt(val);
+  document.getElementById('inv-date-disp').textContent=today;
+  // 車両一覧テーブル描画
+  const tbody=document.getElementById('inv-vehicle-list');
+  if(tbody){
+    tbody.innerHTML=stocks.length===0
+      ?'<tr><td colspan="11" style="text-align:center;padding:16px;color:var(--gray-400)">在庫車両がありません</td></tr>'
+      :stocks.map((d,i)=>`
+        <tr style="background:${i%2?'var(--gray-50)':'#fff'}">
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.no}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.date}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.maker}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.model}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center">${d.year||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmtK(d.km)}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${d.color||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${fmt(d.price)}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right;font-weight:600;color:var(--blue)">${fmt((Number(d.price)||0)+(Number(d.misc)||0))}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center"><b>${d.cond}</b></td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
+        </tr>`).join('');
+  }
   openModal('inv-modal');
 }
 async function execInventory(){
@@ -676,9 +774,123 @@ async function execInventory(){
   if(!date){showToast('⚠ 棚卸日を入力してください');return;}
   const stocks=data.filter(d=>d.status==='在庫中');
   const val=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
-  const inv={id:Date.now().toString(36),date,staff:document.getElementById('inv-staff').value,note:document.getElementById('inv-note').value,count:stocks.length,value:val,snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year,price:d.price}))};
+  const inv={
+    id:Date.now().toString(36),date,
+    staff:document.getElementById('inv-staff').value,
+    note:document.getElementById('inv-note').value,
+    count:stocks.length,value:val,
+    snapshot:stocks.map(d=>({no:d.no,maker:d.maker,model:d.model,year:d.year||'',price:d.price,misc:d.misc||'',km:d.km||'',color:d.color||'',vin:d.vin||'',cond:d.cond,repair:d.repair,date:d.date}))
+  };
   closeModal('inv-modal');
   try{ await saveInvToDB(inv); showToast('✅ 棚卸を保存しました'); }catch(e){}
+}
+
+// ══════════════════════════════════════════
+// 棚卸 印刷・PDF出力
+// ══════════════════════════════════════════
+function printInventory(){
+  const date=document.getElementById('inv-date').value||'—';
+  const staff=document.getElementById('inv-staff').value||'—';
+  const stocks=data.filter(d=>d.status==='在庫中');
+  const totalVal=stocks.reduce((s,d)=>s+(Number(d.price)||0)+(Number(d.misc)||0),0);
+  // 印刷ヘッダー
+  document.getElementById('print-date-label').textContent='棚卸日：'+date;
+  document.getElementById('print-staff-label').textContent='担当者：'+staff;
+  // サマリー
+  document.getElementById('print-summary').innerHTML=`
+    <div class="ps-item"><div class="ps-label">在庫台数</div><div class="ps-val">${stocks.length} 台</div></div>
+    <div class="ps-item"><div class="ps-label">在庫評価額合計</div><div class="ps-val">¥${totalVal.toLocaleString()}</div></div>
+    <div class="ps-item"><div class="ps-label">出力日時</div><div class="ps-val" style="font-size:10pt">${new Date().toLocaleString('ja-JP')}</div></div>
+    <div class="ps-item"><div class="ps-label">備考</div><div class="ps-val" style="font-size:9pt;font-weight:normal">${document.getElementById('inv-note').value||'—'}</div></div>`;
+  // 明細テーブル
+  document.getElementById('print-tbody').innerHTML=stocks.length===0
+    ?'<tr><td colspan="14" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
+    :stocks.map((d,i)=>`<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${d.no}</td><td>${d.date}</td><td>${d.maker}</td><td>${d.model}</td>
+      <td style="text-align:center">${d.year||'—'}</td>
+      <td style="text-align:right">${fmtK(d.km)}</td>
+      <td>${d.color||'—'}</td><td style="font-size:8pt">${d.vin||'—'}</td>
+      <td style="text-align:right">${fmt(d.price)}</td>
+      <td style="text-align:right;font-weight:bold">${fmt((Number(d.price)||0)+(Number(d.misc)||0))}</td>
+      <td style="text-align:center">${d.cond}</td>
+      <td style="text-align:center;color:${d.repair==='あり'?'#b83232':'inherit'}">${d.repair}</td>
+      <td style="font-size:8pt">${d.note||''}</td>
+    </tr>`).join('');
+  document.getElementById('print-footer').textContent='棚卸日：'+date+'　担当：'+staff+'　※このドキュメントは中古車仕入台帳システムより出力されました';
+  // 印刷実行（ブラウザのPDF保存機能を利用）
+  window.print();
+}
+
+// ══════════════════════════════════════════
+// CSV復元（インポート）
+// ══════════════════════════════════════════
+function triggerCSVImport(){
+  document.getElementById('csv-import-input').value='';
+  document.getElementById('csv-import-input').click();
+}
+function handleCSVImport(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    try{
+      const text=e.target.result;
+      const rows=parseCSV(text);
+      if(rows.length<2){showToast('⚠ CSVにデータがありません');return;}
+      const headers=rows[0];
+      const required=['仕入番号','仕入日','メーカー','車種'];
+      const missing=required.filter(h=>!headers.includes(h));
+      if(missing.length>0){showToast('⚠ CSVの形式が正しくありません');return;}
+      const count=rows.length-1;
+      const ok=confirm(
+        '【CSVバックアップ復元】\n\n'+
+        '⚠ 警告：この操作は現在のすべてのデータを削除し、\n'+
+        'CSVファイルの内容で完全に上書きします。\n\n'+
+        '復元件数：'+count+'件\n\n'+
+        '元に戻すことはできません。\n本当に実行しますか？'
+      );
+      if(!ok){showToast('復元をキャンセルしました');return;}
+      showLoading('データを復元中…');
+      // CSVをレコードに変換
+      const hi=Object.fromEntries(headers.map((h,i)=>[h,i]));
+      const g=(row,key)=>(hi[key]!==undefined?row[hi[key]]||'':'');
+      const newData=rows.slice(1).filter(r=>r.length>1&&g(r,'仕入番号')).map(r=>({
+        id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        no:g(r,'仕入番号'),date:g(r,'仕入日'),maker:g(r,'メーカー'),model:g(r,'車種'),
+        year:g(r,'年式'),km:g(r,'走行距離(km)'),color:g(r,'色'),vin:g(r,'車体番号'),
+        supplier:g(r,'仕入先'),price:g(r,'仕入価格(円)'),misc:g(r,'諸費用(円)'),
+        buyer:g(r,'販売先'),sell:g(r,'販売価格(円)'),sellDate:g(r,'販売日'),
+        cond:g(r,'車両状態')||'A',repair:g(r,'修復歴')||'なし',
+        status:g(r,'ステータス')||'在庫中',note:g(r,'備考')
+      }));
+      // Firebaseの既存データを全削除→新規書き込み
+      const db=window._db,r=window._ref,s=window._set;
+      await s(r(db,'ledger/data'),null); // 全削除
+      const newObj={};
+      newData.forEach(d=>{newObj[d.id]=d;});
+      await s(r(db,'ledger/data'),newObj);
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      showToast('✅ '+count+'件のデータを復元しました');
+    }catch(err){
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      showToast('❌ 復元に失敗しました: '+err.message);
+    }
+  };
+  reader.readAsText(file,'UTF-8');
+}
+function parseCSV(text){
+  // BOM除去
+  const clean=text.replace(/^\uFEFF/,'');
+  const rows=[];let row=[],cell='',inQ=false;
+  for(let i=0;i<clean.length;i++){
+    const c=clean[i];
+    if(inQ){if(c==='"'&&clean[i+1]==='"'){cell+='"';i++;}else if(c==='"'){inQ=false;}else{cell+=c;}}
+    else{if(c==='"'){inQ=true;}else if(c===','){row.push(cell);cell='';}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell='';}else if(c!=='\r'){cell+=c;}}
+  }
+  if(cell||row.length){{row.push(cell);rows.push(row);}}
+  return rows;
 }
 
 // ══════════════════════════════════════════
