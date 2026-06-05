@@ -391,9 +391,9 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
   <table class="print-table" id="print-table">
     <thead><tr>
       <th>No.</th><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th>
-      <th>年式</th><th>走行距離</th><th>色</th>
-      <th>仕入価格(円)</th><th>仕入合計(円)</th><th>状態</th><th>修復歴</th>
-      <th>ステータス</th><th>販売日</th><th>販売先</th><th>備考</th>
+      <th>年式</th><th>走行距離</th><th>色</th><th>仕入先</th>
+      <th>仕入価格(円)</th><th>仕入合計(円)</th><th>販売価格(円)</th>
+      <th>状態</th><th>修復歴</th><th>ステータス</th><th>販売日</th><th>販売先</th>
     </tr></thead>
     <tbody id="print-tbody"></tbody>
   </table>
@@ -675,12 +675,16 @@ function renderInvHistory(){
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center">${s.year||'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${s.km?Number(s.km).toLocaleString()+'km':'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.color||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.supplier||'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${s.price?'¥'+Number(s.price).toLocaleString():'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right;font-weight:600;color:var(--blue)">${s.price?'¥'+(Number(s.price||0)+Number(s.misc||0)).toLocaleString():'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${s.sell?'¥'+Number(s.sell).toLocaleString():'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center">${s.cond||'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);color:${s.repair==='あり'?'var(--red)':'inherit'}">${s.repair||'—'}</td>
-          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px;color:var(--gray-400)">${s.sellDate||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.status||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.sellDate||'—'}</td>
           <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.buyer||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.note||'—'}</td>
         </tr>`).join('');
       return `
       <div class="card" style="cursor:default">
@@ -720,12 +724,16 @@ function renderInvHistory(){
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:center;white-space:nowrap">年式</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">走行距離</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">色</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">仕入先</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">仕入価格</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">仕入合計</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">販売価格</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:center;white-space:nowrap">状態</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">修復歴</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">ステータス</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">販売日</th>
                   <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">販売先</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">備考</th>
                 </tr></thead>
                 <tbody>${snapRows}</tbody>
               </table>
@@ -758,21 +766,22 @@ function printFromHistory(invId){
     <div class="ps-item"><div class="ps-label">出力日時</div><div class="ps-val" style="font-size:10pt">${new Date().toLocaleString('ja-JP')}</div></div>
     <div class="ps-item"><div class="ps-label">備考</div><div class="ps-val" style="font-size:9pt;font-weight:normal">${inv.note||'—'}</div></div>`;
   document.getElementById('print-tbody').innerHTML=stocks.length===0
-    ?'<tr><td colspan="16" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
+    ?'<tr><td colspan="17" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
     :stocks.map((d,i)=>`<tr>
       <td style="text-align:center">${i+1}</td>
       <td>${d.no||'—'}</td><td>${d.date||'—'}</td><td>${d.maker||'—'}</td><td>${d.model||'—'}</td>
       <td style="text-align:center">${d.year||'—'}</td>
       <td style="text-align:right">${d.km?Number(d.km).toLocaleString()+'km':'—'}</td>
       <td>${d.color||'—'}</td>
+      <td style="font-size:8pt">${d.supplier||'—'}</td>
       <td style="text-align:right">${d.price?'¥'+Number(d.price).toLocaleString():'—'}</td>
       <td style="text-align:right;font-weight:bold">${d.price?'¥'+(Number(d.price||0)+Number(d.misc||0)).toLocaleString():'—'}</td>
+      <td style="text-align:right">${d.sell?'¥'+Number(d.sell).toLocaleString():'—'}</td>
       <td style="text-align:center">${d.cond||'—'}</td>
       <td style="text-align:center;color:${d.repair==='あり'?'#b83232':'inherit'}">${d.repair||'—'}</td>
       <td style="font-size:8pt">${d.status||'—'}</td>
       <td style="font-size:8pt">${d.sellDate||'—'}</td>
       <td style="font-size:8pt">${d.buyer||'—'}</td>
-      <td style="font-size:8pt">${d.note||''}</td>
     </tr>`).join('');
   document.getElementById('print-footer').textContent=
     '棚卸日：'+inv.date+'　担当：'+(inv.staff||'—')+'　在庫判定：棚卸日時点で入庫済・未納車の車両を含む　※中古車仕入台帳システムより出力';
@@ -920,10 +929,13 @@ async function execInventory(){
     note:document.getElementById('inv-note').value,
     count:stocks.length,value:val,
     snapshot:stocks.map(d=>({
-      no:d.no,maker:d.maker,model:d.model,year:d.year||'',
-      price:d.price,misc:d.misc||'',km:d.km||'',color:d.color||'',
-      vin:d.vin||'',cond:d.cond,repair:d.repair,date:d.date,
-      status:d.status,sellDate:d.sellDate||'',buyer:d.buyer||''
+      no:d.no, maker:d.maker, model:d.model, year:d.year||'',
+      price:d.price||'', misc:d.misc||'', sell:d.sell||'',
+      km:d.km||'', color:d.color||'', vin:d.vin||'',
+      supplier:d.supplier||'', buyer:d.buyer||'',
+      cond:d.cond||'', repair:d.repair||'なし',
+      date:d.date||'', status:d.status||'',
+      sellDate:d.sellDate||'', note:d.note||''
     }))
   };
   closeModal('inv-modal');
