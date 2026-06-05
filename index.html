@@ -232,7 +232,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
             <select id="pc-status" onchange="renderAll()"><option value="">すべてのステータス</option><option>在庫中</option><option>売約済</option><option>販売済</option></select>
             <select id="pc-maker" onchange="renderAll()"><option value="">全メーカー</option></select>
           </div>
-          <div class="tbl-wrap"><table><thead><tr><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th><th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th><th>粗利</th><th>販売先</th><th>状態</th><th>修復歴</th><th>ステータス</th><th>操作</th></tr></thead><tbody id="pc-tbody"></tbody></table></div>
+          <div class="tbl-wrap"><table><thead><tr><th>仕入番号</th><th>仕入日</th><th>メーカー</th><th>車種</th><th>年式</th><th>走行距離</th><th>仕入価格</th><th>販売価格</th><th>粗利</th><th>販売先</th><th>販売日</th><th>状態</th><th>修復歴</th><th>ステータス</th><th>操作</th></tr></thead><tbody id="pc-tbody"></tbody></table></div>
           <div id="pc-empty" class="empty-state" style="display:none"><span class="ico">📭</span><p>データがありません。「新規登録」から追加してください。</p></div>
         </div>
         <div class="page" id="page-stats">
@@ -385,7 +385,7 @@ tbody tr:nth-child(even):hover{background:var(--blue-xl)}
 <div id="print-area">
   <div class="print-header">
     <h1>中古自動車　棚卸台帳</h1>
-    <div class="meta"><span id="print-date-label"></span><span id="print-staff-label"></span><span id="print-company">エコカーショップ・ノーツ（有限会社NOTES）</span></div>
+    <div class="meta"><span id="print-date-label"></span><span id="print-staff-label"></span><span id="print-company">株式会社　〇〇オート</span></div>
   </div>
   <div class="print-summary" id="print-summary"></div>
   <table class="print-table" id="print-table">
@@ -600,6 +600,7 @@ function renderPCTable(){
       <td>${d.model}${d.year?' <small style="color:var(--gray-400)">'+d.year+'年</small>':''}</td>
       <td>${d.year||'—'}</td><td>${fmtK(d.km)}</td><td>${fmt(d.price)}</td><td>${fmt(d.sell)}</td>
       <td>${profitHTML(d)}</td><td style="font-size:11px">${d.buyer||'—'}</td>
+      <td style="font-size:11px;color:${d.sellDate?'var(--gray-800)':'var(--gray-400)'}">${d.sellDate||'—'}</td>
       <td><b>${d.cond}</b></td><td style="color:${d.repair==='あり'?'var(--red)':'inherit'}">${d.repair}</td>
       <td>${badgeHTML(d.status)}</td>
       <td style="white-space:nowrap;display:flex;gap:4px">
@@ -664,19 +665,118 @@ function renderStats(){
 function renderInvHistory(){
   const html=invHist.length===0
     ?'<div class="empty-state"><span class="ico">📋</span><p>棚卸履歴がありません</p></div>'
-    :invHist.slice().reverse().map(inv=>`
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div><span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span><div style="font-size:11px;color:var(--gray-400);margin-top:2px">担当：${inv.staff||'—'}</div></div>
-          <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">在庫 ${inv.count}台</span>
+    :invHist.slice().reverse().map(inv=>{
+      const snapRows=(inv.snapshot||[]).map((s,i)=>`
+        <tr style="background:${i%2?'var(--gray-50)':'#fff'}">
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.no||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.date||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.maker||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.model||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center">${s.year||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${s.km?Number(s.km).toLocaleString()+'km':'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200)">${s.color||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right">${s.price?'¥'+Number(s.price).toLocaleString():'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:right;font-weight:600;color:var(--blue)">${s.price?'¥'+(Number(s.price||0)+Number(s.misc||0)).toLocaleString():'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);text-align:center">${s.cond||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);color:${s.repair==='あり'?'var(--red)':'inherit'}">${s.repair||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px;color:var(--gray-400)">${s.sellDate||'—'}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--gray-200);font-size:11px">${s.buyer||'—'}</td>
+        </tr>`).join('');
+      return `
+      <div class="card" style="cursor:default">
+        <!-- ヘッダー行：クリックで詳細を開閉 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;cursor:pointer"
+             onclick="toggleInvDetail('inv-detail-${inv.id}',this)">
+          <div>
+            <span style="font-size:15px;font-weight:700">📅 ${inv.date}　棚卸実施</span>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:2px">担当：${inv.staff||'—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">在庫 ${inv.count}台</span>
+            <span class="inv-chevron" style="font-size:18px;color:var(--gray-400);transition:transform .2s">▼</span>
+          </div>
         </div>
-        <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+        <!-- サマリーカード -->
+        <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:10px">
           <div class="stat-card card-sm"><div class="s-label">在庫台数</div><div class="s-value">${inv.count}<span class="s-unit"> 台</span></div></div>
           <div class="stat-card blue card-sm"><div class="s-label">在庫評価額</div><div class="s-value" style="font-size:16px">${fmt(inv.value)}</div></div>
+          ${inv.note?`<div class="stat-card card-sm" style="grid-column:1/-1"><div class="s-label">備考</div><div style="font-size:13px;color:var(--gray-600)">${inv.note}</div></div>`:''}
         </div>
-        ${inv.note?`<div style="font-size:12px;color:var(--gray-400);margin-top:8px">📝 ${inv.note}</div>`:''}
-      </div>`).join('');
+        <!-- 詳細エリア（初期は非表示） -->
+        <div id="inv-detail-${inv.id}" style="display:none;margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--blue)">在庫車両詳細（${inv.date}時点）</span>
+            <button class="btn btn-outline btn-sm" onclick="printFromHistory('${inv.id}')">🖨️ 印刷・PDF</button>
+          </div>
+          ${(inv.snapshot||[]).length===0
+            ?'<p style="font-size:12px;color:var(--gray-400)">スナップショットデータがありません</p>'
+            :`<div style="overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--gray-200)">
+              <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px">
+                <thead><tr>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">仕入番号</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">仕入日</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">メーカー</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">車種</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:center;white-space:nowrap">年式</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">走行距離</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">色</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">仕入価格</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:right;white-space:nowrap">仕入合計</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:center;white-space:nowrap">状態</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">修復歴</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">販売日</th>
+                  <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;white-space:nowrap">販売先</th>
+                </tr></thead>
+                <tbody>${snapRows}</tbody>
+              </table>
+            </div>`}
+        </div>
+      </div>`;
+    }).join('');
   ['pc-inv-list','sp-inv-list'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+
+// 棚卸履歴の詳細を開閉する
+function toggleInvDetail(detailId, headerEl){
+  const el=document.getElementById(detailId);if(!el)return;
+  const chevron=headerEl.querySelector('.inv-chevron');
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  if(chevron) chevron.style.transform=isOpen?'':'rotate(180deg)';
+}
+
+// 棚卸履歴から印刷・PDF出力
+function printFromHistory(invId){
+  const inv=invHist.find(x=>x.id===invId);if(!inv)return;
+  const stocks=inv.snapshot||[];
+  const totalVal=stocks.reduce((s,d)=>s+(Number(d.price||0))+(Number(d.misc||0)),0);
+  document.getElementById('print-date-label').textContent='棚卸日：'+inv.date;
+  document.getElementById('print-staff-label').textContent='担当者：'+(inv.staff||'—');
+  document.getElementById('print-summary').innerHTML=`
+    <div class="ps-item"><div class="ps-label">在庫台数</div><div class="ps-val">${stocks.length} 台</div></div>
+    <div class="ps-item"><div class="ps-label">在庫評価額合計</div><div class="ps-val">¥${totalVal.toLocaleString()}</div></div>
+    <div class="ps-item"><div class="ps-label">出力日時</div><div class="ps-val" style="font-size:10pt">${new Date().toLocaleString('ja-JP')}</div></div>
+    <div class="ps-item"><div class="ps-label">備考</div><div class="ps-val" style="font-size:9pt;font-weight:normal">${inv.note||'—'}</div></div>`;
+  document.getElementById('print-tbody').innerHTML=stocks.length===0
+    ?'<tr><td colspan="16" style="text-align:center;padding:12pt;color:#888">在庫車両がありません</td></tr>'
+    :stocks.map((d,i)=>`<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${d.no||'—'}</td><td>${d.date||'—'}</td><td>${d.maker||'—'}</td><td>${d.model||'—'}</td>
+      <td style="text-align:center">${d.year||'—'}</td>
+      <td style="text-align:right">${d.km?Number(d.km).toLocaleString()+'km':'—'}</td>
+      <td>${d.color||'—'}</td>
+      <td style="text-align:right">${d.price?'¥'+Number(d.price).toLocaleString():'—'}</td>
+      <td style="text-align:right;font-weight:bold">${d.price?'¥'+(Number(d.price||0)+Number(d.misc||0)).toLocaleString():'—'}</td>
+      <td style="text-align:center">${d.cond||'—'}</td>
+      <td style="text-align:center;color:${d.repair==='あり'?'#b83232':'inherit'}">${d.repair||'—'}</td>
+      <td style="font-size:8pt">${d.status||'—'}</td>
+      <td style="font-size:8pt">${d.sellDate||'—'}</td>
+      <td style="font-size:8pt">${d.buyer||'—'}</td>
+      <td style="font-size:8pt">${d.note||''}</td>
+    </tr>`).join('');
+  document.getElementById('print-footer').textContent=
+    '棚卸日：'+inv.date+'　担当：'+(inv.staff||'—')+'　在庫判定：棚卸日時点で入庫済・未納車の車両を含む　※中古車仕入台帳システムより出力';
+  window.print();
 }
 
 // ══════════════════════════════════════════
@@ -747,11 +847,13 @@ async function deleteRec(id){
  */
 function getStocksAtDate(invDate){
   return data.filter(d=>{
+    // ★過去遡及対応：仕入日が棚卸日より後 = 棚卸日時点では未入庫 → 在庫外
+    if(d.date && d.date > invDate) return false;
     if(d.status==='在庫中') return true;
     if(d.status==='売約済')  return true;
     if(d.status==='販売済'){
-      if(!d.sellDate) return true;          // 販売日未入力→在庫扱い
-      return d.sellDate > invDate;          // 販売日が棚卸日より後→棚卸日時点は未納車
+      if(!d.sellDate) return true;
+      return d.sellDate > invDate;
     }
     return false;
   });
